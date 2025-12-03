@@ -20,9 +20,9 @@ const HomeStackScreen = () => {
                     <CartIconButton onPress={() => navigation.navigate('Cart')} />
                 ),
                 headerStyle: {
-                    backgroundColor: '#282828',
+                    backgroundColor: '#f7f7f7ff',
                 },
-                headerTintColor: '#fff',
+                headerTintColor: '#0a0a0aff',
                 headerTitleStyle: {
                     fontWeight: 'bold',
                 },
@@ -33,41 +33,41 @@ const HomeStackScreen = () => {
             <Stack.Screen 
                 name="Home" 
                 component={HomeScreen}
-                options={{ title: '🏠 Trang chủ' }}
+                options={{ title: 'Trang chủ' }}
             />
             <Stack.Screen 
                 name="Categories" 
                 component={CategoriesScreen}
-                options={{ title: '📂 Danh mục' }}
+                options={{ title: 'Danh mục' }}
             />
             <Stack.Screen 
                 name="ProductDetail" 
                 component={ProductDetailScreen}
-                options={{ title: '📦 Chi tiết sản phẩm' }}
+                options={{ title: 'Chi tiết sản phẩm' }}
             />
             
             {/* --- SHOPPING CART SCREENS --- */}
             <Stack.Screen 
                 name="Cart" 
                 component={CartScreen}
-                options={{ title: '🛒 Giỏ hàng' }}
+                options={{ title: 'Giỏ hàng' }}
             />
             <Stack.Screen 
                 name="Checkout" 
                 component={CheckoutScreen}
-                options={{ title: '📝 Thanh toán' }}
+                options={{ title: 'Thanh toán' }}
             />
             <Stack.Screen 
                 name="OrderConfirm" 
                 component={OrderConfirmScreen}
-                options={{ title: '✅ Xác nhận đơn hàng' }}
+                options={{ title: 'Xác nhận đơn hàng' }}
             />
             
             {/* --- ORDER HISTORY --- */}
             <Stack.Screen 
                 name="OrderHistory" 
                 component={OrderHistoryScreen}
-                options={{ title: '📋 Lịch sử đơn hàng' }}
+                options={{ title: 'Lịch sử đơn hàng' }}
             />
         </Stack.Navigator>
     );

@@ -12,9 +12,12 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Đảm bảo đường dẫn import chính xác
 import { updateUser, getUserById, User } from '../database'; 
+
+// Định nghĩa ParamList tùy chỉnh nếu cần, nhưng để đơn giản, ta dùng any cho navigation
 
 // Kiểu dữ liệu tối giản của người dùng lưu trong AsyncStorage
 interface LoggedInUserLite {
@@ -23,8 +26,13 @@ interface LoggedInUserLite {
     role: string;
 }
 
+// Định nghĩa kiểu dữ liệu cho navigation (sử dụng kiểu rộng hơn để reset hoạt động)
+type NavigationProps = NativeStackNavigationProp<any>;
+
 const UserProfile = () => {
-    const navigation = useNavigation();
+    // 🛑 FIX: Sử dụng kiểu rộng hơn cho navigation
+    const navigation = useNavigation<NavigationProps>();
+    
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<number | null>(null);
     const [isEditing, setIsEditing] = useState(false); 
@@ -37,7 +45,6 @@ const UserProfile = () => {
     // State lưu trữ dữ liệu gốc (để hiển thị ở View Mode)
     const [originalUsername, setOriginalUsername] = useState('');
     const [originalRole, setOriginalRole] = useState('');
-    const [originalRegistrationDate, setOriginalRegistrationDate] = useState(''); // Thêm Ngày Đăng Ký
 
 
     // --- 1. Tải thông tin người dùng hiện tại (Load Data) ---
@@ -73,7 +80,6 @@ const UserProfile = () => {
         }
     }, [navigation]);
 
-    // Khắc phục lỗi: Bọc hàm async loadUserData bên trong useCallback đồng bộ
     useFocusEffect(
         useCallback(() => {
             loadUserData();
@@ -93,10 +99,7 @@ const UserProfile = () => {
                     onPress: async () => {
                         try {
                             await AsyncStorage.removeItem('loggedInUser');
-                            navigation.reset({
-                                index: 0,
-                                routes: [{ name: 'Login' }], 
-                            });
+                            
                         } catch (error) {
                             Alert.alert("Lỗi", "Không thể đăng xuất.");
                         }
@@ -128,6 +131,7 @@ const UserProfile = () => {
             
             await updateUser(updatedUser);
             
+            // Cập nhật AsyncStorage nếu cập nhật thành công
             const newLiteUser = JSON.stringify({ id: userId, username: currentUsername, role: currentRole });
             await AsyncStorage.setItem('loggedInUser', newLiteUser);
 
@@ -145,8 +149,8 @@ const UserProfile = () => {
     
     // Hàm xử lý Hủy Chỉnh sửa
     const handleCancelEdit = () => {
-        setCurrentUsername(originalUsername);
-        setCurrentRole(originalRole);
+        // Tải lại dữ liệu gốc an toàn hơn
+        loadUserData(); 
         setIsEditing(false);
     };
 
@@ -183,7 +187,7 @@ const UserProfile = () => {
                 </TouchableOpacity>
 
                 {/* NÚT ĐĂNG XUẤT */}
-                 <TouchableOpacity 
+                   <TouchableOpacity 
                     style={[styles.logoutButton, styles.flexButton]}
                     onPress={handleLogout}
                 >
@@ -222,6 +226,16 @@ const UserProfile = () => {
                 />
             </View>
 
+            <View style={styles.formGroup}>
+                <Text style={styles.label}>Vai Trò (Không thể chỉnh sửa)</Text>
+                <TextInput
+                    style={[styles.input, styles.disabledInput]}
+                    value={currentRole}
+                    editable={false}
+                />
+            </View>
+
+
             <TouchableOpacity 
                 style={styles.saveButton}
                 onPress={handleUpdate}
@@ -256,32 +270,32 @@ const UserProfile = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+ safeArea: {
     flex: 1,
     marginTop: 20,
     backgroundColor: '#ffffff', // nền tối sang trọng
-  },
-  container: {
+ },
+ container: {
     padding: 20,
     flexGrow: 1,
     width: '100%',
-  },
-  headerTitle: {
+ },
+ headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#0c0c0dff',
     marginBottom: 8,
     textAlign: 'center',
-  },
-  subtitle: {
+ },
+ subtitle: {
     fontSize: 15,
     color: '#585555ff',
     textAlign: 'center',
     marginBottom: 25,
-  },
+ },
 
-  // Card hiển thị thông tin
-  infoCard: {
+ // Card hiển thị thông tin
+ infoCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 15,
@@ -290,26 +304,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 4,
-  },
-  infoRowSimple: {
+ },
+ infoRowSimple: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#3d3d3d',
-  },
-  infoLabel: {
+ },
+ infoLabel: {
     fontSize: 15,
     fontWeight: '600',
     color: '#0d0d0eff',
-  },
-  infoValue: {
+ },
+ infoValue: {
     fontSize: 15,
     color: '#fbc531',
     fontWeight: '500',
     textAlign: 'right',
-  },
-  roleTag: {
+ },
+ roleTag: {
     backgroundColor: '#fbc531',
     color: '#2f3640',
     paddingHorizontal: 12,
@@ -319,19 +333,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     alignSelf: 'flex-end',
-  },
+ },
 
-  // Form
-  formGroup: {
+ // Form
+ formGroup: {
     marginBottom: 15,
-  },
-  label: {
+ },
+ label: {
     fontSize: 14,
     fontWeight: '600',
     color: '#101112ff',
     marginBottom: 5,
-  },
-  input: {
+ },
+ input: {
     height: 45,
     borderColor: '#edf1f6ff',
     borderWidth: 1,
@@ -340,88 +354,88 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e6edff',
     color: '#0f1010ff',
     fontSize: 15,
-  },
-  disabledInput: {
+ },
+ disabledInput: {
     backgroundColor: '#e2e6edff',
     color: '#010202ff',
-  },
+ },
 
-  // Buttons
-  horizontalButtonContainer: {
+ // Buttons
+ horizontalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 15,
-  },
-  flexButton: {
+ },
+ flexButton: {
     flex: 1,
     marginHorizontal: 6,
-  },
-  editButton: {
-    backgroundColor: '#00a8ff',
+ },
+ editButton: {
+    backgroundColor: '#ffae00ff',
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  editButtonText: {
+ },
+ editButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: '#e84118',
+ },
+ logoutButton: {
+    backgroundColor: '#e8c218ff',
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  logoutButtonText: {
+ },
+ logoutButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
-  },
-  saveButton: {
+ },
+ saveButton: {
     backgroundColor: '#44bd32',
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
-  },
-  saveButtonText: {
+ },
+ saveButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
-  },
-  cancelButton: {
+ },
+ cancelButton: {
     backgroundColor: '#fbc531',
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 12,
-  },
-  cancelButtonText: {
+ },
+ cancelButtonText: {
     color: '#2f3640',
     fontSize: 15,
     fontWeight: '600',
-  },
-  backButton: {
+ },
+ backButton: {
     padding: 10,
     marginTop: 15,
     alignItems: 'center',
-  },
-  backButtonText: {
+ },
+ backButtonText: {
     color: '#dcdde1',
     fontSize: 14,
-  },
+ },
 
-  // Loading
-  loadingContainer: {
+ // Loading
+ loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
+ },
+ loadingText: {
     marginTop: 10,
     color: '#dcdde1',
-  },
+ },
 });
 
 

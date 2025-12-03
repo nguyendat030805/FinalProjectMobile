@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 28,
         fontWeight: '700',
-        color: '#FFD700',
+        color: '#ffffffff',
         letterSpacing: 1,
     },
     headerSubtitle: {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     tabButtonActive: {
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#eabc02ff',
         borderColor: '#FFD700',
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 2 },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     tabIconActive: {
-        fontSize: 22,
+        fontSize: 2,
         color: '#FFD700',
     },
     tabLabel: {
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     tabLabelActive: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#FFD700',
+        color: '#000000ff',
     },
     content: {
         flex: 1,

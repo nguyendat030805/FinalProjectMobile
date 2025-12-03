@@ -135,7 +135,7 @@ const OrderHistoryScreen = ({ navigation }: any) => {
     if (loading) {
         return (
             <View style={[styles.container, styles.centerContainer]}>
-                <ActivityIndicator size="large" color="#E91E63" />
+                <ActivityIndicator size="large" color="#d11050ff" />
             </View>
         );
     }
@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
     },
     orderId: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#E91E63',
+        fontWeight: '500',
+        color: '#000000ff',
     },
     status: {
         fontSize: 12,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     totalAmount: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f80404ff',
     },
     emptyIcon: {
         fontSize: 60,

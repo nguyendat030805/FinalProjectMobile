@@ -28,14 +28,14 @@ export type Product = {
     id: number;
     name: string;
     price: number;
-    img: string;
+    img: string; // Chỉ lưu TÊN FILE (Ví dụ: '1.jpg')
     categoryId: number;
 };
 
 export type User = {
     id: number;
     username: string;
-    password: string; // Giữ lại cho mục đích type matching, nhưng KHÔNG NÊN LƯU plaintext
+    password: string; 
     role: string;
 };
 
@@ -48,12 +48,14 @@ const initialCategories: Category[] = [
     { id: 5, name: 'Porsche' },
 ];
 
+// 🔴 ĐÃ SỬA: SỬ DỤNG TÊN FILE DUY NHẤT (Không có './assets/' hay đường dẫn tuyệt đối)
 const initialProducts: Product[] = [
-    { id: 1, name: 'Lamborghini Revuelto', price: 250000, img:require( './assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'), categoryId: 1 },
-    { id: 2, name: 'Lamborghini Aventador', price: 1100000, img:require( './assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'), categoryId: 2 },
-    { id: 3, name: 'Ferrari F8 Tributo / Spider', price: 490000, img:require( './assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'), categoryId: 3 },
-    { id: 4, name: 'Maserati MC20 / MC20 Cielo', price: 120000, img:require( './assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'), categoryId: 4 },
-    { id: 5, name: 'Porsche Taycan', price: 980000, img: require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'), categoryId: 5 },
+    { id: 1, name: 'Lamborghini Revuelto', price: 250000, img: 'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg', categoryId: 1 },
+    { id: 2, name: 'Lamborghini Aventador', price: 1100000, img: 'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg', categoryId: 1 },
+    { id: 3, name: 'Ferrari F8 Tributo / Spider', price: 490000, img: 'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg', categoryId: 3 },
+    { id: 4, name: 'Maserati MC20 / MC20 Cielo', price: 120000, img: 'Hình-siêu-xe-cực-nét.jpg', categoryId: 4 },
+    { id: 5, name: 'Audi R8 V10', price: 980000, img: 'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg', categoryId: 2 },
+    { id: 6, name: 'Porsche Taycan', price: 980000, img: '1.jpg', categoryId: 5 },
 ];
 
 // ------------------- Reset/Delete Database -------------------
@@ -62,8 +64,10 @@ export const resetDatabase = async (): Promise<void> => {
         // First, try to drop all tables
         try {
             const database = await getDb();
+            // Đã sửa lỗi chính tả: execAsync chứ không phải runAsync cho lệnh DROP
             await database.execAsync('DROP TABLE IF EXISTS products');
             await database.execAsync('DROP TABLE IF EXISTS categories');
+            await database.execAsync('DROP TABLE IF EXISTS users');
             console.log('✅ All tables dropped');
         } catch (dropError) {
             console.warn('Warning dropping tables:', dropError);
@@ -93,7 +97,8 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
         // 1. Categories
         await database.execAsync('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, name TEXT)');
         for (const cat of initialCategories) {
-            await database.runAsync('INSERT OR IGNORE INTO categories (id, name) VALUES (?, ?)', [cat.id, cat.name]);
+            // Sử dụng INSERT OR REPLACE thay vì IGNORE để đảm bảo dữ liệu mới được áp dụng
+            await database.runAsync('INSERT OR REPLACE INTO categories (id, name) VALUES (?, ?)', [cat.id, cat.name]);
         }
 
         // 2. Products
@@ -108,29 +113,17 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
             )`
         );
         for (const prod of initialProducts) {
+            // Sử dụng INSERT OR REPLACE để cập nhật dữ liệu nếu id đã tồn tại
             await database.runAsync(
-                'INSERT OR IGNORE INTO products (id, name, price, img, categoryId) VALUES (?, ?, ?, ?, ?)',
+                'INSERT OR REPLACE INTO products (id, name, price, img, categoryId) VALUES (?, ?, ?, ?, ?)',
                 [prod.id, prod.name, prod.price, prod.img, prod.categoryId]
             );
         }
         console.log(`✅ Inserted ${initialProducts.length} products`);
 
-        // --- Migration: chuyển các đường dẫn ảnh cũ (items_Picture) sang ./assets/ --
-        try {
-            const outdated: Array<{ id: number; img: string }> = await database.getAllAsync(
-                "SELECT id, img FROM products WHERE img LIKE '%items_Picture/%'"
-            );
-            for (const row of outdated) {
-                const parts = row.img.split('/');
-                const fname = parts[parts.length - 1];
-                const newImg = `./assets/${fname}`;
-                await database.runAsync('UPDATE products SET img = ? WHERE id = ?', [newImg, row.id]);
-                console.log(`🔄 Migrated product ${row.id} image to ${newImg}`);
-            }
-        } catch (merr) {
-            console.warn('⚠️ Image migration skipped (table may not exist yet)');
-        }
-
+        // --- Migration: Chỉ cần cập nhật logic này nếu bạn muốn xóa tiền tố './assets/' --
+        // Tuy nhiên, vì initialProducts đã được sửa, ta có thể bỏ qua bước migration phức tạp này
+        
         // 3. Users
         await database.execAsync(
             `CREATE TABLE IF NOT EXISTS users (
@@ -143,27 +136,20 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
 
         // Add default admin
         await database.runAsync(
-            `INSERT INTO users (username, password, role)
-             SELECT 'admin', '123456', 'admin'
-             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin')`
+            `INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', '123456', 'admin')`
         );
 
         // Add demo users
         await database.runAsync(
-            `INSERT INTO users (username, password, role)
-             SELECT 'user1', 'password1', 'user'
-             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user1')`
+            `INSERT OR IGNORE INTO users (username, password, role) VALUES ('user1', 'password1', 'user')`
         );
         await database.runAsync(
-            `INSERT INTO users (username, password, role)
-             SELECT 'user2', 'password2', 'user'
-             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'user2')`
+            `INSERT OR IGNORE INTO users (username, password, role) VALUES ('user2', 'password2', 'user')`
         );
         await database.runAsync(
-            `INSERT INTO users (username, password, role)
-             SELECT 'guest1', 'guestpass', 'guest'
-             WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'guest1')`
+            `INSERT OR IGNORE INTO users (username, password, role) VALUES ('guest1', 'guestpass', 'guest')`
         );
+
 
         console.log('✅ Database initialized');
         if (onSuccess) onSuccess();
@@ -241,24 +227,10 @@ export const fetchProductsByCategoryId = async (categoryId: number): Promise<Pro
     }
 };
 
-// --- BẢN ĐỒ ÁNH XẠ ẢNH (Vì require() không hoạt động trực tiếp với chuỗi từ DB) ---
-// Hàm này giúp ánh xạ chuỗi đường dẫn cục bộ (local path string) thành module require()
-export const getImageSource = (imgString: string) => {
-    switch (imgString) {
-        case './assets/1.jpg':
-            return require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg');
-        case './assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg':
-            return require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg');
-        case './assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg':
-            return require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg');
-        case './assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg':
-            return require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg');
-        // Thêm đường dẫn cho các ảnh khác nếu có
-        default:
-            // Sử dụng một placeholder nếu không tìm thấy đường dẫn
-            return require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'); 
-    }
-};
+// 🔴 KHUYẾN NGHỊ: ĐÃ BỎ HÀM getImageSource LỖI Ở ĐÂY 
+// VÀ CHỈ SỬ DỤNG LOGIC ÁNH XẠ ĐÃ SỬA CỦA HomeScreen.tsx
+// (Vì logic đó linh hoạt hơn và xử lý tên file trực tiếp)
+
 
 // ------------------- CRUD Products -------------------
 export const addProduct = async (product: Omit<Product, 'id'>) => {
@@ -470,7 +442,32 @@ export const deleteCategory = async (id: number) => {
         console.error('❌ Error deleting category:', error.message);
     }
 };
+const imageAssets: { [key: string]: any } = {
+    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
+    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
+    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
+    'Hình-siêu-xe-cực-nét.jpg': require('./assets/Hình-siêu-xe-cực-nét.jpg'),
+    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
+    '1.jpg': require('./assets/1.jpg'),
+    '26900.jpg': require('./assets/26900.jpg'), // Ảnh mặc định cho các trường hợp không tìm thấy
+    // Đảm bảo TẤT CẢ TÊN FILE ảnh bạn sử dụng đều có trong map này
+};
 
+// --- HÀM ÁNH XẠ ẢNH (BẮT BUỘC PHẢI CÓ EXPORT) ---
+export const getImageSource = (img: string) => {
+    // 1. Chuẩn hóa & trích xuất filename (để xử lý các đường dẫn cũ nếu còn sót hoặc gõ sai)
+    const normalizedPath = img.replace(/\\/g, '/');
+    const filename = normalizedPath.split('/').pop() || '';
+    
+    // 2. Tra cứu trong map
+    if (imageAssets[filename]) {
+        return imageAssets[filename];
+    }
+
+    // Fallback mặc định
+    console.warn(`⚠️ Image not found in map for filename: ${filename}. Using fallback.`);
+    return require('./assets/26900.jpg'); 
+};
 // ------------------- Reset then Re-initialize -------------------
 // Utility to drop existing tables and immediately re-run initDatabase
 export const resetAndInitDatabase = async (onSuccess?: () => void): Promise<void> => {

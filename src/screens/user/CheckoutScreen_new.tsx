@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HomeStackParamList } from '../../HomeScreen';
 import { useCart } from '../../context/CartContext';
 import { saveOrder } from '../../utils/orderStorage';
+import { getImageSource } from '../../database';
 
 type CheckoutScreenProps = NativeStackScreenProps<HomeStackParamList, 'Checkout'>;
 
@@ -119,7 +120,7 @@ const CheckoutScreen = ({ navigation, route }: CheckoutScreenProps) => {
                         {cartItems.map((item: any, index: number) => (
                             <View key={`${item.product.id}-${index}`} style={styles.summaryItem}>
                                 <Image
-                                    source={{ uri: item.product.img }}
+                                    source={getImageSource(item.product.img)}
                                     style={styles.summaryImage}
                                 />
                                 <View style={styles.summaryDetails}>
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     backBtn: {
-        backgroundColor: '#E91E63',
+        backgroundColor: '#eec407ff',
         paddingHorizontal: 24,
         paddingVertical: 12,
         borderRadius: 8,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     },
     confirmBtn: {
         flex: 1,
-        backgroundColor: '#E91E63',
+        backgroundColor: '#e9a21eff',
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',

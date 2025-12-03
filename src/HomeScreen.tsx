@@ -13,11 +13,10 @@ import {
     ScrollView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product, fetchProducts, initDatabase } from './database';
 import { useCart } from './context/CartContext';
-import Header from './Header';
+import Header from './Header'; 
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -39,10 +38,11 @@ export type HomeStackParamList = {
 
 type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
+// --- Hàm tiện ích (Không thay đổi) ---
 const formatCurrency = (amount: number) =>
     amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 });
 
-// Map ảnh tĩnh theo database - danh sách tất cả ảnh trong assets
+// --- Ánh xạ ảnh tĩnh (Không thay đổi) ---
 const imageAssets: { [key: string]: any } = {
     'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
     'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
@@ -55,23 +55,29 @@ const imageAssets: { [key: string]: any } = {
     'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('./assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
     'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
     'Ảnh-siêu-xe-Lamborghini.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini.jpg'),
+    // Thêm các ảnh khác nếu có
 };
 
-// Get image by extracting filename
+// --- HÀM LẤY ẢNH ĐÃ ĐƯỢC CHỈNH SỬA (FIX LỖI HIỂN THỊ ẢNH FALLBACK) ---
 const getImageSource = (img: string) => {
-    // Extract filename from path
-    const filename = img.split('/').pop() || '';
+    // 1. Chuẩn hóa: Thay thế tất cả '\' thành '/' để xử lý đường dẫn Windows
+    const normalizedPath = img.replace(/\\/g, '/');
+
+    // 2. Trích xuất filename: Lấy phần tử cuối cùng sau dấu '/'
+    const filename = normalizedPath.split('/').pop() || '';
     
-    // Look up in assets map
+    // 3. Tra cứu trong map
     if (imageAssets[filename]) {
         return imageAssets[filename];
     }
 
-    console.warn(`⚠️ Image not found in map: ${img}. Using fallback.`);
+    console.warn(`⚠️ Image not found in map: ${filename}. Original path: ${img}. Using fallback.`);
     
     // Fallback mặc định
-    return require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg');
+    return require('./assets/26900.jpg');
 };
+// ----------------------------------------------------------------------
+
 
 const HomeScreen = ({ navigation }: HomeScreenProps) => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -89,6 +95,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
         try {
             const prods = await fetchProducts();
             console.log('📦 Products loaded:', prods.length, 'products');
+            // Log chi tiết để debug đường dẫn ảnh
             prods.forEach((p, i) => console.log(`  [${i}] ${p.name} - img: ${p.img}`));
             setProducts(prods.reverse());
         } catch (error) {
@@ -104,7 +111,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
             const user = await AsyncStorage.getItem('loggedInUser');
             if (!user) {
                 Alert.alert('Thông báo', 'Vui lòng đăng nhập để mua hàng', [
-                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Home') },
+                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Home') }, // Chú ý: Cần điều hướng đến màn hình Đăng nhập/Login, không phải Home
                     { text: 'Hủy', style: 'cancel' },
                 ]);
                 return;
@@ -179,18 +186,21 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
                     <Text style={styles.menuText}>Danh mục</Text>
                 </TouchableOpacity>
             </View>
-            <Header/>
+            {/* Component Header của bạn - thường dùng cho Thanh điều hướng trên cùng */}
+            <Header/> 
             <Text style={styles.welcomeText}>Chào mừng đến với cửa hàng Siêu xe</Text>
         </>
     );
 
     return (
         <>
+            {/* Hiển thị Loading */}
             {loading && products.length === 0 ? (
                 <View style={[styles.fullScreenContainer, { justifyContent: 'center', alignItems: 'center' }]}>
                     <ActivityIndicator size="large" color="#E91E63" />
                 </View>
             ) : (
+                // FlatList hiển thị sản phẩm
                 <FlatList
                     data={products}
                     keyExtractor={(item) => item.id.toString()}
@@ -206,7 +216,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
                 />
             )}
 
-            {/* Color Selection Modal */}
+            {/* Modal Chọn Màu Sắc/Số lượng */}
             <Modal
                 visible={showColorModal}
                 transparent
@@ -315,6 +325,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
     );
 };
 
+// --- Stylesheet (Không thay đổi) ---
 const styles = StyleSheet.create({
     // --- Container & Layout ---
     fullScreenContainer: { 
@@ -324,7 +335,7 @@ const styles = StyleSheet.create({
     flatListContent: { 
         // Giữ nguyên: Đây là padding giữa màn hình và các cột
         paddingHorizontal: ITEM_MARGIN / 2, 
-        paddingBottom: 40,
+        paddingBottom: 20,
     },
     maincontainer:{
         flex:1,
@@ -346,21 +357,21 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around', 
         paddingVertical: 12, 
         marginHorizontal: 15, 
-        backgroundColor: '#282828', 
+        backgroundColor: '#ffffffff', 
         borderRadius: 12, 
         elevation: 8, 
         marginTop: -30, 
         marginBottom: 20,
         borderWidth: 1,
-        borderColor: '#E91E6350', 
+        borderColor: '#00000050', 
     },
     menuItem: {
         paddingHorizontal: 10,
     },
     menuText: { 
-        fontSize: 15, 
-        fontWeight: '700', 
-        color: '#FFFFFF', 
+        fontSize: 13, 
+        fontWeight: '500', 
+        color: '#040404ff', 
         textAlign: 'center',
         textTransform: 'uppercase',
     },
@@ -374,7 +385,7 @@ const styles = StyleSheet.create({
     },
     productCard: { 
         flex: 1, 
-        backgroundColor: '#282828', 
+        backgroundColor: '#ffffffff', 
         borderRadius: 10, 
         alignItems: 'center', 
         justifyContent: 'space-between', 
@@ -394,26 +405,22 @@ const styles = StyleSheet.create({
     },
     productName: { 
         fontSize: 14, 
-        fontWeight: '700', 
-        color: '#FFFFFF', 
+        fontWeight: '400', 
+        color: '#000000ff', 
         textAlign: 'center', 
         // Loại bỏ marginHorizontal, thay bằng paddingHorizontal trên productCard
         marginBottom: 5,
     },
     productPrice: { 
         fontSize: 16, 
-        fontWeight: 'bold', 
-        color: '#E91E63', 
+        color: '#fb0202ff', 
         marginBottom: 10,
-        textShadowColor: 'rgba(233, 30, 99, 0.4)', 
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
     },
     
     // --- Button ---
     buyButton: { 
-        backgroundColor: '#E91E63', 
-        width: '90%', 
+        backgroundColor: '#e9981fff', 
+        width: '70%', 
         paddingVertical: 10, 
         borderRadius: 6, 
         alignItems: 'center',
@@ -425,8 +432,8 @@ const styles = StyleSheet.create({
     },
     buyButtonText: { 
         color: '#fff', 
-        fontWeight: '800', 
-        fontSize: 13, 
+        fontWeight: '500', 
+        fontSize: 10, 
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
@@ -491,21 +498,21 @@ const styles = StyleSheet.create({
     },
     colorOption: {
         flex: 1,
-        minWidth: '48%',
+        minWidth: '33%',
         borderRadius: 12,
-        padding: 12,
+        padding: 5,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: '#f0f0f0',
         backgroundColor: '#f9f9f9',
     },
     colorOptionSelected: {
-        borderColor: '#E91E63',
-        backgroundColor: '#FCE4EC',
+        borderColor: '#e9b31eff',
+        backgroundColor: '#fefefeff',
     },
     colorCircle: {
-        width: 40,
-        height: 40,
+        width: 20,
+        height: 20,
         borderRadius: 20,
         marginBottom: 8,
         borderWidth: 2,
@@ -521,13 +528,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f9f9f9',
         borderRadius: 12,
-        padding: 12,
+        padding: 10,
     },
     quantityBtn: {
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         borderRadius: 8,
-        backgroundColor: '#E91E63',
+        backgroundColor: '#f3cb03ff',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -546,7 +553,7 @@ const styles = StyleSheet.create({
     priceSummary: {
         backgroundColor: '#f0f0f0',
         borderRadius: 12,
-        padding: 16,
+        padding: 10,
         marginBottom: 20,
     },
     priceLabel: {
@@ -555,9 +562,9 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     priceValue: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#ff0000ff',
     },
     modalFooter: {
         flexDirection: 'row',
@@ -581,7 +588,7 @@ const styles = StyleSheet.create({
     },
     confirmModalBtn: {
         flex: 1,
-        backgroundColor: '#E91E63',
+        backgroundColor: '#f1a211ff',
         paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',

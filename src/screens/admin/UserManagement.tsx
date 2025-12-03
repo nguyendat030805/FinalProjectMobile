@@ -196,9 +196,9 @@ const UserManagementScreen = () => {
     // --- Lấy màu viền bên trái cho Item ---
     const getBorderColorForRole = (role: string): string => {
         switch (role) {
-            case 'admin': return '#ffffffff'; // Cam cho Admin
-            case 'user': return '#2196F3'; // Xanh dương cho User
-            case 'guest': return '#9E9E9E'; // Xám cho Guest
+            case 'admin': return '#eccc4bff'; // Cam cho Admin
+            case 'user': return '#eccc4bff'; // Xanh dương cho User
+            case 'guest': return '#eccc4bff'; // Xám cho Guest
             default: return '#4CAF50';
         }
     };
@@ -298,13 +298,13 @@ const UserManagementScreen = () => {
                                     style={[
                                         styles.roleButton, 
                                         role === r && styles.roleButtonActive,
-                                        { backgroundColor: role === r ? getBorderColorForRole(r) : '#E0E0E0' }
+                                        { backgroundColor: role === r ? getBorderColorForRole(r) : '#f5f5f5ff' }
                                     ]}
                                     onPress={() => setRole(r)}
                                 >
                                     <Text style={[
                                         styles.roleButtonText, 
-                                        { color: role === r ? '#FFFFFF' : '#333' }
+                                        { color: role === r ? '#020101ff' : '#333' }
                                     ]}>
                                         {r.toUpperCase()}
                                     </Text>
@@ -313,10 +313,10 @@ const UserManagementScreen = () => {
                         </View>
                         
                         <View style={styles.modalActionButtons}>
-                            <TouchableOpacity style={[styles.actionButton, styles.modalButton, { backgroundColor: '#F44336' }]} onPress={() => { resetForm(); setShowModal(false); }}>
+                            <TouchableOpacity style={[styles.actionButton, styles.modalButton, { backgroundColor: '#ec9b05ff' }]} onPress={() => { resetForm(); setShowModal(false); }}>
                                 <Text style={styles.actionButtonText}>Hủy</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.actionButton, styles.modalButton, { backgroundColor: '#4CAF50' }]} onPress={handleSaveUser}>
+                            <TouchableOpacity style={[styles.actionButton, styles.modalButton, { backgroundColor: '#ec9b05ff' }]} onPress={handleSaveUser}>
                                 <Text style={styles.actionButtonText}>{editingUser ? 'Cập Nhật' : 'Lưu'}</Text>
                             </TouchableOpacity>
                         </View>
@@ -519,13 +519,13 @@ const styles = StyleSheet.create({
     // --- Modal Styles ---
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Nền tối hơn
+        backgroundColor: 'rgba(116, 111, 111, 0.6)', // Nền tối hơn
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalContent: {
         width: '90%',
-        backgroundColor: '#0F1115',
+        backgroundColor: '#ffffffff',
         borderRadius: 15,
         padding: 25,
         shadowColor: "#000",

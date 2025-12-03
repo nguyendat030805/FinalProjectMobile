@@ -40,7 +40,8 @@ const ProductsManagement = () => {
 
     useEffect(() => {
         const initializeData = async () => {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Đợi 500ms để đảm bảo DB kịp mở/load
+            await new Promise(resolve => setTimeout(resolve, 500)); 
             await loadData();
         };
         initializeData();
@@ -53,7 +54,8 @@ const ProductsManagement = () => {
             setProducts(productsData);
             setCategories(categoriesData);
             if (categoriesData.length > 0) {
-                setProductCategoryId(categoriesData[0].id.toString());
+                // Đảm bảo rằng Category ID được set là String
+                setProductCategoryId(categoriesData[0].id.toString()); 
             }
         } catch (error) {
             console.error('Error loading data:', error);
@@ -67,7 +69,8 @@ const ProductsManagement = () => {
         setProductName('');
         setProductPrice('');
         setProductImg('');
-        setProductCategoryId(categories[0]?.id.toString() || '1');
+        // Đặt lại category ID đầu tiên nếu tồn tại
+        setProductCategoryId(categories[0]?.id.toString() || '1'); 
         setEditingProduct(null);
     };
 
@@ -162,7 +165,6 @@ const ProductsManagement = () => {
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.appTitle}>Quản lý Sản phẩm</Text>
-                        <Text style={styles.appSubtitle}>Quản trị kho & danh mục</Text>
                     </View>
                     <View style={styles.headerActions}>
                         <TouchableOpacity
@@ -219,8 +221,11 @@ const ProductsManagement = () => {
 
                     {products.map(product => (
                         <View key={product.id} style={styles.card}>
-                            {/* ĐÃ SỬA: SỬ DỤNG getImageSource() để ánh xạ chuỗi DB thành require() */}
-                            <Image source={getImageSource(product.img)} style={styles.cardImage} />
+                            {/* SỬ DỤNG getImageSource() - Đã đúng */}
+                            <Image 
+                                source={getImageSource(product.img)} 
+                                style={styles.cardImage} 
+                            />
                             <View style={styles.cardInfo}>
                                 <Text numberOfLines={1} style={styles.cardName}>
                                     {product.name}
@@ -293,10 +298,11 @@ const ProductsManagement = () => {
                                 keyboardType="decimal-pad"
                             />
 
-                            <Text style={styles.label}>Đường dẫn ảnh cục bộ (Ví dụ: ./assets/ten-file.jpg)</Text>
+                            {/* Hướng dẫn chỉ nhập TÊN FILE - Đã đúng */}
+                            <Text style={styles.label}>Tên file ảnh (Ví dụ: 1.jpg)</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="./assets/ten-file.jpg"
+                                placeholder="Ví dụ: 1.jpg"
                                 value={productImg}
                                 onChangeText={setProductImg}
                             />
@@ -351,14 +357,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F6FA'
     },
     header: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 14
     },
     appTitle: {
-        fontSize: 22,
-        fontWeight: '800',
+        fontSize: 23,
+        fontWeight: '500',
         color: '#1F2430',
         letterSpacing: 0.3
     },
@@ -370,10 +376,12 @@ const styles = StyleSheet.create({
     headerActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10
+        gap: 10,
+        marginTop: 20,
+
     },
     primaryButton: {
-        backgroundColor: '#2D6CDF',
+        backgroundColor: '#D1772E',
         paddingVertical: 10,
         paddingHorizontal: 14,
         borderRadius: 12,
@@ -385,18 +393,18 @@ const styles = StyleSheet.create({
     },
     primaryButtonText: {
         color: '#FFFFFF',
-        fontWeight: '700',
-        fontSize: 14,
+        fontWeight: '400',
+        fontSize: 13,
         textAlign: 'center'
     },
     secondaryButton: {
-        backgroundColor: '#E9EEF9',
+        backgroundColor: '#dfae00ff',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 10
     },
     secondaryButtonText: {
-        color: '#2D6CDF',
+        color: '#f5f5f5ff',
         fontWeight: '700',
         fontSize: 13
     },
@@ -415,7 +423,7 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     dangerButton: {
-        backgroundColor: '#FCE8E8',
+        backgroundColor: '#f6dd78ff',
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: 10,
@@ -508,7 +516,7 @@ const styles = StyleSheet.create({
     },
     cardPrice: {
         fontSize: 14,
-        color: '#2D6CDF',
+        color: '#ff0000ff',
         fontWeight: '700',
         marginBottom: 4
     },
@@ -590,7 +598,7 @@ const styles = StyleSheet.create({
         marginBottom: 16
     },
     picker: {
-        height: 48
+        height: 60
     },
     loadingContainer: {
         justifyContent: 'center',

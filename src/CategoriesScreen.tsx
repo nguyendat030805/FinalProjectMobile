@@ -10,7 +10,7 @@ import {
     Image,
     SafeAreaView,
     RefreshControl,
-    TextInput, // <<-- Thêm TextInput
+    TextInput,
 } from 'react-native';
 
 // Import các kiểu dữ liệu và hàm từ file database services của bạn
@@ -19,10 +19,46 @@ import {
     Product, 
     fetchCategories, 
     fetchProductsByCategoryId,
-    getImageSource,
-    // <<-- IMPORT HÀM TÌM KIẾM MỚI
-    searchProductsAdvanced,
+    searchProductsAdvanced, // <<-- Hàm tìm kiếm nâng cao
 } from './database'; // Đảm bảo đường dẫn này chính xác
+
+// --- 1. Ánh xạ ảnh tĩnh (Cần phải sao chép từ HomeScreen.tsx để tránh lỗi Reference) ---
+// Giả định rằng bạn có các ảnh này trong thư mục ./assets/
+const imageAssets: { [key: string]: any } = {
+    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
+    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
+    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
+    'Hình-siêu-xe-cực-nét.jpg': require('./assets/Hình-siêu-xe-cực-nét.jpg'),
+    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
+    '1.jpg': require('./assets/1.jpg'),
+    'Hình-siêu-xe-Lamborghini-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-scaled.jpg'),
+    'Hình-ảnh-Siêu-xe-4k-scaled.jpg': require('./assets/Hình-ảnh-Siêu-xe-4k-scaled.jpg'),
+    'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('./assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
+    'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
+    'Ảnh-siêu-xe-Lamborghini.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini.jpg'),
+    // Thêm các ảnh mặc định/fallback nếu cần
+    '26900.jpg': require('./assets/26900.jpg'), 
+    '2161748.jpg': require('./assets/2161748.jpg'), 
+    // Nếu bạn đang dùng logic tên file từ database.tsx đã sửa, thì không cần tiền tố ./assets/
+};
+
+// --- 2. Hàm lấy nguồn ảnh (FIX: Lấy từ tên file) ---
+const getImageSource = (img: string) => {
+    // 1. Chuẩn hóa & trích xuất filename
+    const normalizedPath = img.replace(/\\/g, '/');
+    const filename = normalizedPath.split('/').pop() || '';
+    
+    // 2. Tra cứu trong map
+    if (imageAssets[filename]) {
+        return imageAssets[filename];
+    }
+
+    console.warn(`⚠️ Image not found in map for CategorySelector: ${filename}`);
+    
+    // Fallback mặc định
+    return require('./assets/Hình-siêu-xe-cực-nét.jpg');
+};
+
 
 // --- Component chính ---
 const CategorySelector = () => {
@@ -31,11 +67,10 @@ const CategorySelector = () => {
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     
-    // --- State cho Tìm kiếm & Lọc ---
+    // --- State cho Tìm kiếm & Lọc Giá ---
     const [searchTerm, setSearchTerm] = useState('');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
-    // ---------------------------------
     
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,14 +91,23 @@ const CategorySelector = () => {
 
     // --- 2. Hàm tải Sản phẩm dựa trên bộ lọc hiện tại ---
     const loadProducts = useCallback(async (currentCategoryId: number | null, isSearchingMode: boolean) => {
-        setIsLoading(true);
+        // Nếu đã có dữ liệu, chỉ hiện loading khi Refresh
+        if (products.length === 0) setIsLoading(true); 
+        
         try {
             let data: Product[] = [];
             
             // Nếu có bất kỳ bộ lọc nào (tìm kiếm/giá), sử dụng hàm tìm kiếm nâng cao
             if (isSearchingMode) {
-                const parsedMinPrice = minPrice ? parseFloat(minPrice) : undefined;
-                const parsedMaxPrice = maxPrice ? parseFloat(maxPrice) : undefined;
+                // Chuyển đổi giá trị TextInput sang số, nếu không hợp lệ thì là undefined
+                const parsedMinPrice = minPrice ? parseFloat(minPrice.replace(/,/g, '')) : undefined;
+                const parsedMaxPrice = maxPrice ? parseFloat(maxPrice.replace(/,/g, '')) : undefined;
+                
+                // Kiểm tra nếu min > max
+                if (parsedMinPrice !== undefined && parsedMaxPrice !== undefined && parsedMinPrice > parsedMaxPrice) {
+                    // Có thể thêm Alert ở đây, nhưng tạm thời chỉ log lỗi
+                    console.warn('Min price is greater than Max price. Filtering may be incorrect.');
+                }
                 
                 data = await searchProductsAdvanced(searchTerm, parsedMinPrice, parsedMaxPrice);
                 
@@ -80,20 +124,23 @@ const CategorySelector = () => {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [searchTerm, minPrice, maxPrice]); // loadProducts phụ thuộc vào bộ lọc
+    }, [searchTerm, minPrice, maxPrice, products.length]); 
+
 
     // --- Effects ---
     useEffect(() => {
         loadCategories();
     }, [loadCategories]);
 
-    // Effect: Khi Category ID thay đổi VÀ KHÔNG TRONG CHẾ ĐỘ TÌM KIẾM, tải sản phẩm theo danh mục.
+    // Effect: Khi Category ID thay đổi VÀ KHÔNG TRONG CHẾ ĐIỆN TÌM KIẾM, tải sản phẩm theo danh mục.
     useEffect(() => {
+        // Khi Category ID thay đổi, chỉ tải sản phẩm theo category nếu KHÔNG có bộ lọc tìm kiếm
         if (!isSearching && selectedCategoryId !== null) {
             loadProducts(selectedCategoryId, false);
-        } else if (!isSearching && selectedCategoryId === null) {
-            // Trường hợp không có danh mục và không tìm kiếm, có thể load toàn bộ hoặc không làm gì
-            // Hiện tại không làm gì vì loadCategories đã xử lý chọn mục đầu tiên
+        }
+        // Khi người dùng xóa hết bộ lọc, quay về tải sản phẩm theo selectedCategoryId
+        if (selectedCategoryId !== null && !isSearching) {
+             loadProducts(selectedCategoryId, false);
         }
     }, [selectedCategoryId, isSearching, loadProducts]);
     
@@ -101,8 +148,9 @@ const CategorySelector = () => {
     useEffect(() => {
         // Chỉ chạy nếu đang trong chế độ tìm kiếm
         if (isSearching) {
-            // Debounce hoặc chỉ chạy khi người dùng ngừng nhập (đơn giản hóa cho ví dụ)
+            // Debounce để tránh gọi API liên tục khi người dùng gõ
             const handler = setTimeout(() => {
+                // Sử dụng null cho categoryId khi tìm kiếm nâng cao (lọc qua tất cả)
                 loadProducts(null, true);
             }, 500); // Đợi 500ms sau khi ngừng gõ/thay đổi giá
 
@@ -119,7 +167,8 @@ const CategorySelector = () => {
         } else if (selectedCategoryId !== null) {
             loadProducts(selectedCategoryId, false);
         } else {
-            setIsRefreshing(false);
+            // Trường hợp refresh khi chưa có category nào được chọn
+            loadCategories(); 
         }
     };
     
@@ -133,14 +182,13 @@ const CategorySelector = () => {
         setSelectedCategoryId(id);
     };
 
-
     // --- Render Item cho Danh mục ---
     const renderCategoryButton: ListRenderItem<Category> = ({ item }) => {
-        const isSelected = item.id === selectedCategoryId && !isSearching;
+        // Category button không được chọn nếu đang ở chế độ tìm kiếm
+        const isSelected = item.id === selectedCategoryId && !isSearching; 
         return (
             <TouchableOpacity
                 style={[styles.categoryButton, isSelected && styles.selectedCategoryButton]}
-                // Dùng hàm xử lý mới
                 onPress={() => handleCategorySelect(item.id)} 
             >
                 <Text style={[styles.categoryText, isSelected && styles.selectedCategoryText]}>
@@ -180,7 +228,7 @@ const CategorySelector = () => {
                 />
                 <View style={styles.priceFilterContainer}>
                     <TextInput
-                        style={styles.priceInput}
+                        style={[styles.priceInput, {marginRight: 8}]}
                         placeholder="Giá Min (USD)"
                         placeholderTextColor="#999"
                         keyboardType="numeric"
@@ -283,7 +331,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 10,
         backgroundColor: '#fff',
-        marginHorizontal: 4,
+        // Đã loại bỏ marginHorizontal trong priceInput và dùng marginRight/marginLeft để kiểm soát khoảng cách
     },
     // --- Category List Styles ---
     categoryList: {

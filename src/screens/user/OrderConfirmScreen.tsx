@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../HomeScreen';
-
+import { getImageSource } from '../../database';
 type OrderConfirmScreenProps = NativeStackScreenProps<HomeStackParamList, 'OrderConfirm'>;
 
 const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
@@ -43,7 +43,7 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
                     <View style={styles.orderIdBox}>
                         <Text style={styles.orderId}>{orderId}</Text>
                         <TouchableOpacity style={styles.copyBtn}>
-                            <Text style={styles.copyBtnText}>📋 Sao chép</Text>
+                            <Text style={styles.copyBtnText}>Sao chép</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -66,7 +66,7 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
 
                 {/* Order Items */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>📦 Sản phẩm trong đơn</Text>
+                    <Text style={styles.sectionLabel}>Sản phẩm trong đơn</Text>
                     <View style={styles.itemsBox}>
                         {cartItems.map((item: any, index: number) => (
                             <View
@@ -77,7 +77,7 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
                                 ]}
                             >
                                 <Image
-                                    source={{ uri: item.product.img }}
+                                    source={getImageSource(item.product.img)}
                                     style={styles.itemImage}
                                 />
                                 <View style={styles.itemInfo}>
@@ -98,7 +98,7 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
 
                 {/* Delivery Info */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>🚚 Thông tin giao hàng</Text>
+                    <Text style={styles.sectionLabel}>Thông tin giao hàng</Text>
                     <View style={styles.infoBox}>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Địa chỉ:</Text>
@@ -123,7 +123,7 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
 
                 {/* Payment Info */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>💳 Thông tin thanh toán</Text>
+                    <Text style={styles.sectionLabel}>Thông tin thanh toán</Text>
                     <View style={styles.infoBox}>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Phương thức:</Text>
@@ -190,11 +190,11 @@ const OrderConfirmScreen = ({ navigation, route }: OrderConfirmScreenProps) => {
             {/* Action Buttons */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.orderBtn} onPress={handleViewOrders}>
-                    <Text style={styles.orderBtnText}>📋 Lịch sử đơn hàng</Text>
+                    <Text style={styles.orderBtnText}>Lịch sử đơn hàng</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.homeBtn} onPress={handleBackHome}>
-                    <Text style={styles.homeBtnText}>🏠 Về trang chủ</Text>
+                    <Text style={styles.homeBtnText}>Về trang chủ</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     orderId: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#080707ff',
         letterSpacing: 1,
     },
     copyBtn: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     itemPrice: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f61010ff',
         marginLeft: 8,
     },
     infoBox: {
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     },
     totalRow: {
         borderBottomWidth: 2,
-        borderBottomColor: '#E91E63',
+        borderBottomColor: '#e98a1eff',
         paddingVertical: 12,
     },
     summaryLabel: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     totalAmount: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f50d0dff',
     },
     noteBox: {
         backgroundColor: '#FFF3E0',
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     homeBtn: {
-        backgroundColor: '#E91E63',
+        backgroundColor: '#e9911eff',
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',

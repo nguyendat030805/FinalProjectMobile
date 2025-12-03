@@ -1,6 +1,6 @@
 /* ====================================
-   Luxury Premium UI – Optimized Version
-   ==================================== */
+    Luxury Premium UI – Optimized Version
+    ==================================== */
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -12,7 +12,8 @@ import {
     Alert,
     ScrollView,
     Modal,
-    ActivityIndicator
+    ActivityIndicator,
+    SafeAreaView
 } from 'react-native';
 
 import {
@@ -103,16 +104,16 @@ const CategoriesManagement = () => {
     if (loading) {
         return (
             <View style={styles.loading}>
-                <ActivityIndicator size="large" color={GOLD} />
+                <ActivityIndicator size="large" color="#D4AF37" /> 
                 <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <ScrollView>
-
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                
                 {/* HEADER */}
                 <View style={styles.header}>
                     <Text style={styles.pageTitle}>Danh mục sản phẩm</Text>
@@ -129,119 +130,120 @@ const CategoriesManagement = () => {
                 </View>
 
                 <View style={styles.separator} />
-
+                
                 {/* LIST */}
-                {categories.length === 0 ? (
-                    <Text style={styles.empty}>Chưa có danh mục nào.</Text>
-                ) : (
-                    categories.map(cat => (
-                        <View key={cat.id} style={styles.card}>
-                            <View style={styles.cardInfo}>
-                                <Text style={styles.cardTitle}>{cat.name}</Text>
-                                <Text style={styles.cardId}>ID: {cat.id}</Text>
-                            </View>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    {categories.length === 0 ? (
+                        <Text style={styles.empty}>Chưa có danh mục nào.</Text>
+                    ) : (
+                        <View style={styles.listContainer}>
+                            {categories.map(cat => (
+                                <View key={cat.id} style={styles.card}>
+                                    <View style={styles.cardInfo}>
+                                        <Text style={styles.cardTitle}>{cat.name}</Text>
+                                        <Text style={styles.cardId}>ID: {cat.id}</Text>
+                                    </View>
 
-                            <View style={styles.cardActions}>
-                                <TouchableOpacity
-                                    style={styles.editBtn}
-                                    onPress={() => {
-                                        setEditingCategory(cat);
-                                        setCategoryName(cat.name);
-                                        setShowModal(true);
-                                    }}
-                                >
-                                    <Text style={styles.editBtnText}>Sửa</Text>
-                                </TouchableOpacity>
+                                    <View style={styles.cardActions}>
+                                        <TouchableOpacity
+                                            style={styles.editBtn}
+                                            onPress={() => {
+                                                setEditingCategory(cat);
+                                                setCategoryName(cat.name);
+                                                setShowModal(true);
+                                            }}
+                                        >
+                                            <Text style={styles.editBtnText}>Sửa</Text>
+                                        </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={styles.deleteBtn}
-                                    onPress={() => handleDeleteCategory(cat.id, cat.name)}
-                                >
-                                    <Text style={styles.deleteBtnText}>Xóa</Text>
-                                </TouchableOpacity>
-                            </View>
+                                        <TouchableOpacity
+                                            style={styles.deleteBtn}
+                                            onPress={() => handleDeleteCategory(cat.id, cat.name)}
+                                        >
+                                            <Text style={styles.deleteBtnText}>Xóa</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            ))}
                         </View>
-                    ))
-                )}
+                    )}
+                </ScrollView>
 
-            </ScrollView>
+                {/* MODAL */}
+                <Modal transparent visible={showModal} animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
 
-            {/* MODAL */}
-            <Modal transparent visible={showModal} animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-
-                        <Text style={styles.modalTitle}>
-                            {editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
-                        </Text>
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Tên danh mục..."
-                            placeholderTextColor="#888"
-                            value={categoryName}
-                            onChangeText={setCategoryName}
-                        />
-
-                        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveCategory}>
-                            <Text style={styles.saveBtnText}>
-                                {editingCategory ? "Cập nhật" : "Lưu"}
+                            <Text style={styles.modalTitle}>
+                                {editingCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
                             </Text>
-                        </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.cancelBtn}
-                            onPress={() => {
-                                resetForm();
-                                setShowModal(false);
-                            }}
-                        >
-                            <Text style={styles.cancelBtnText}>Hủy</Text>
-                        </TouchableOpacity>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Tên danh mục..."
+                                placeholderTextColor="#888"
+                                value={categoryName}
+                                onChangeText={setCategoryName}
+                            />
 
+                            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveCategory}>
+                                <Text style={styles.saveBtnText}>
+                                    {editingCategory ? "Cập nhật" : "Lưu"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.cancelBtn}
+                                onPress={() => {
+                                    resetForm();
+                                    setShowModal(false);
+                                }}
+                            >
+                                <Text style={styles.cancelBtnText}>Hủy</Text>
+                            </TouchableOpacity>
+
+                        </View>
                     </View>
-                </View>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </SafeAreaView>
     );
 };
 
 /* ========================================
-   PREMIUM LUXURY DARK–GOLD STYLING
-   ======================================== */
+    PREMIUM LUXURY DARK–GOLD STYLING
+    ======================================== */
 
 const GOLD = "#D4AF37";
 const DARK = "#0E0E0E";
-const MEDIUM = "#181818";
 
 const styles = StyleSheet.create({
 
+    safeArea: { flex: 1, backgroundColor: '#ffffff' },
+    
     container: {
         flex: 1,
-        backgroundColor: DARK,
+        backgroundColor: '#ffffff',
         paddingHorizontal: 20,
-        paddingTop: 40,
     },
-
+    
     header: {
-        flexDirection: "row",
+        flexDirection: "column",
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 16,
+        paddingTop: 20,
     },
 
     pageTitle: {
-        fontSize: 26,
+        fontSize: 20,
         fontWeight: "800",
-        color: GOLD,
+        color: '#333',
         letterSpacing: 1,
-        textShadowColor: "rgba(212,175,55,0.3)",
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 4,
     },
 
     addButton: {
-        backgroundColor: GOLD,
+        backgroundColor: '#D1772E',
         paddingVertical: 10,
         paddingHorizontal: 18,
         borderRadius: 10,
@@ -249,68 +251,86 @@ const styles = StyleSheet.create({
     },
     addButtonText: {
         fontWeight: "bold",
-        fontSize: 15,
-        color: DARK
+        fontSize: 13,
+        color: '#ffffff'
     },
 
     separator: {
         height: 1,
-        backgroundColor: "#333",
+        backgroundColor: "#E0E0E0",
         marginBottom: 20,
     },
+    
+    // --- List Layout (3 Columns) ---
+    scrollContent: {
+        paddingBottom: 20,
+    },
+    listContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 5,
+    },
 
-    /* LIST CARD */
+    /* LIST CARD (3 columns) */
     card: {
-        flexDirection: "row",
-        padding: 18,
-        backgroundColor: MEDIUM,
-        borderRadius: 12,
+        flexBasis: '32%', 
         marginBottom: 15,
+        padding: 10,
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#2a2a2a",
-        shadowColor: GOLD,
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
+        borderColor: "#E0E0E0",
+        
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
         elevation: 4,
     },
 
-    cardInfo: { flex: 1 },
+    cardInfo: { 
+        flex: 1,
+        marginBottom: 10,
+        alignItems: 'center', 
+    },
 
     cardTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#fff",
+        fontSize: 13, 
+        fontWeight: "600",
+        color: "#000000",
         marginBottom: 4,
+        textAlign: 'center',
     },
 
     cardId: {
         color: "#aaa",
-        fontSize: 13,
+        fontSize: 11,
+        textAlign: 'center',
     },
 
     cardActions: {
         flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
+        justifyContent: 'center',
+        gap: 5,
+        marginTop: 5,
     },
 
     editBtn: {
-        backgroundColor: "#007bff",
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderRadius: 8,
+        backgroundColor: "#D1772E",
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 6,
     },
 
     deleteBtn: {
-        backgroundColor: "#d9534f",
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderRadius: 8,
+        backgroundColor: "#e2a26dff",
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 6,
     },
 
-    editBtnText: { color: "#fff", fontWeight: "600" },
-    deleteBtnText: { color: "#fff", fontWeight: "600" },
+    editBtnText: { color: "#fff", fontWeight: "600", fontSize: 11 },
+    deleteBtnText: { color: "#fff", fontWeight: "600", fontSize: 11 },
 
     empty: {
         textAlign: "center",
@@ -329,11 +349,11 @@ const styles = StyleSheet.create({
     },
 
     modalContainer: {
-        backgroundColor: MEDIUM,
+        backgroundColor: '#fff',
         width: "85%",
         padding: 25,
         borderRadius: 14,
-        shadowColor: GOLD,
+        shadowColor: "#000",
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 10,
@@ -343,22 +363,24 @@ const styles = StyleSheet.create({
         fontSize: 22,
         textAlign: "center",
         fontWeight: "800",
-        color: GOLD,
+        color: '#333',
         marginBottom: 20,
         letterSpacing: 0.5
     },
 
     input: {
-        backgroundColor: "#242424",
+        backgroundColor: "#f5f5f5",
         padding: 15,
         borderRadius: 10,
-        color: "#fff",
+        color: "#333",
         marginBottom: 18,
         fontSize: 16,
+        borderWidth: 1,
+        borderColor: '#ddd',
     },
 
     saveBtn: {
-        backgroundColor: GOLD,
+        backgroundColor: '#007bff',
         padding: 14,
         borderRadius: 10,
         marginBottom: 12,
@@ -367,31 +389,32 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 16,
         fontWeight: "800",
-        color: DARK
+        color: "#fff"
     },
 
     cancelBtn: {
-        borderColor: "#666",
+        borderColor: "#ccc",
         borderWidth: 1,
         padding: 14,
         borderRadius: 10,
+        backgroundColor: '#fff',
     },
     cancelBtnText: {
         textAlign: "center",
         fontSize: 15,
         fontWeight: "600",
-        color: "#aaa",
+        color: "#666",
     },
 
     loading: {
         flex: 1,
-        backgroundColor: DARK,
+        backgroundColor: '#fff',
         justifyContent: "center",
         alignItems: "center",
     },
     loadingText: {
         marginTop: 15,
-        color: "#ccc",
+        color: "#666",
         fontSize: 16
     }
 });

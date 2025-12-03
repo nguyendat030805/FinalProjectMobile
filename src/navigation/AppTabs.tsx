@@ -14,7 +14,7 @@ import LogoutScreen from '../sqlite/LogoutScreen';
 
 export type BottomTabParamList = {
     HomeTab: undefined;
-    AdminTab: undefined; // Đã thêm
+    AdminTab: undefined; 
     SignupSqlite: undefined;
     LoginSqlite: undefined;
     LogoutScreen: undefined;
@@ -42,6 +42,7 @@ const AppTabs = () => {
         };
 
         checkLoginStatus();
+        // Kiểm tra trạng thái login mỗi 2 giây để cập nhật UI
         const interval = setInterval(checkLoginStatus, 2000); 
         return () => clearInterval(interval);
     }, []);
@@ -52,7 +53,7 @@ const AppTabs = () => {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: styles.tabBar,
+                tabBarStyle: styles.tabBar, // Đã áp dụng style căn đều
                 tabBarActiveTintColor: "#FFD369",
                 tabBarInactiveTintColor: "#C8C8C8",
                 tabBarLabelStyle: styles.tabLabel,
@@ -69,7 +70,7 @@ const AppTabs = () => {
                 }}
             />
 
-            {/* 2. ADMIN TAB (VỊ TRÍ GIỮA - Chỉ hiển thị khi là Admin) */}
+            {/* 2. ADMIN TAB (Chỉ hiển thị khi là Admin) */}
             {isAdmin && (
                 <Tab.Screen
                     name="AdminTab"
@@ -90,6 +91,7 @@ const AppTabs = () => {
                     title: "Signup",
                     tabBarIcon: ({ color, size }) =>
                         <Ionicons name="person-add" size={size-5} color={color} />,
+                    // tabBarButton: () => null sẽ ẩn hoàn toàn. Dùng logic này để ẩn khi đã login
                     tabBarButton: isLoggedIn ? () => null : undefined, 
                 }}
             />
@@ -128,9 +130,11 @@ const styles = StyleSheet.create({
         backgroundColor: "#111",
         borderTopWidth: 0,
         elevation: 8,
-        // Dùng flexbox mặc định của React Navigation đã đủ để chia đều các nút.
-        // Cần bỏ `display: 'flex'` và `justifyContent: "space-between"` nếu chúng gây lỗi trên một số phiên bản RN, 
-        // nhưng tôi sẽ giữ lại nếu bạn đã thêm chúng vì lý do nào đó.
+        
+        // 🛠️ CHỈNH SỬA CHO CĂN ĐỀU TAB
+        // 'space-evenly' phân bố đều khoảng trống giữa các mục VÀ ở hai bên cùng.
+        justifyContent: 'space-evenly', 
+        
         shadowColor: "#000",
         shadowOpacity: 0.3,
         shadowOffset: { width: 0, height: -2 },

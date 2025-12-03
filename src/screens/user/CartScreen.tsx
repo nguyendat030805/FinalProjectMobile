@@ -13,6 +13,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart, CartItem } from '../../context/CartContext';
 import { HomeStackParamList } from '../../HomeScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { getImageSource } from '../../database';
 
 type CartScreenProps = NativeStackScreenProps<HomeStackParamList, 'Cart'>;
 
@@ -50,7 +52,11 @@ const CartScreen = ({ navigation }: CartScreenProps) => {
     if (cartItems.length === 0) {
         return (
             <View style={[styles.container, styles.emptyContainer]}>
-                <Text style={styles.emptyText}>🛒</Text>
+                <Text style={styles.emptyText}><Ionicons 
+                    name="cart-outline" // Icon giỏ hàng đơn giản (chỉ có đường viền)
+                    size={32}          // Kích thước icon
+                    color="#000000"    // Màu đen
+                    /></Text>
                 <Text style={styles.emptyTitle}>Giỏ hàng trống</Text>
                 <Text style={styles.emptySubtitle}>Hãy thêm sản phẩm để tiếp tục</Text>
                 <TouchableOpacity
@@ -73,7 +79,7 @@ const CartScreen = ({ navigation }: CartScreenProps) => {
                 {cartItems.map((item: CartItem, index: number) => (
                     <View key={`${item.product.id}-${item.color}-${index}`} style={styles.cartItem}>
                         <Image
-                            source={{ uri: item.product.img.startsWith('./') ? item.product.img : item.product.img }}
+                            source={getImageSource(item.product.img)}
                             style={styles.productImage}
                         />
 
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     continueShopping: {
-        backgroundColor: '#E91E63',
+        backgroundColor: '#d2a81fff',
         paddingHorizontal: 30,
         paddingVertical: 12,
         borderRadius: 8,
@@ -217,9 +223,9 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     price: {
-        fontSize: 16,
+        fontSize: 10,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f70a0aff',
     },
     quantityControl: {
         flexDirection: 'row',
@@ -277,15 +283,14 @@ const styles = StyleSheet.create({
     totalPrice: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f60a0aff',
     },
     checkoutBtn: {
-        backgroundColor: '#E91E63',
+        backgroundColor: '#e98a1eff',
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
         elevation: 4,
-        shadowColor: '#E91E63',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,

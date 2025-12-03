@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HomeStackParamList } from '../../HomeScreen';
 import { useCart } from '../../context/CartContext';
 import { saveOrder } from '../../utils/orderStorage';
+import { getImageSource } from '../../database';
 
 type CheckoutScreenProps = NativeStackScreenProps<HomeStackParamList, 'Checkout'>;
 
@@ -119,7 +120,7 @@ const CheckoutScreen = ({ navigation, route }: CheckoutScreenProps) => {
                         {cartItems.map((item: any, index: number) => (
                             <View key={`${item.product.id}-${index}`} style={styles.summaryItem}>
                                 <Image
-                                    source={{ uri: item.product.img }}
+                                    source={getImageSource(item.product.img)}
                                     style={styles.summaryImage}
                                 />
                                 <View style={styles.summaryDetails}>
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     summaryPrice: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f10404ff',
     },
     input: {
         backgroundColor: '#fff',
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
     },
     totalRow: {
         borderBottomWidth: 2,
-        borderBottomColor: '#E91E63',
+        borderBottomColor: '#e9981eff',
         marginTop: 8,
         paddingTop: 8,
     },
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
     totalValue: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#E91E63',
+        color: '#f70d0dff',
     },
     footer: {
         backgroundColor: '#fff',
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     },
     confirmBtn: {
         flex: 1,
-        backgroundColor: '#E91E63',
+        backgroundColor: '#e1a612ff',
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
