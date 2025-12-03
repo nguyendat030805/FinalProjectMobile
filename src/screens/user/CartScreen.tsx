@@ -12,7 +12,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCart, CartItem } from '../../context/CartContext';
-import { HomeStackParamList } from '../../HomeScreen';
+import { HomeStackParamList } from '../HomeScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getImageSource } from '../../database';
 

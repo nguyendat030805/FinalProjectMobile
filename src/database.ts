@@ -121,10 +121,7 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
         }
         console.log(`✅ Inserted ${initialProducts.length} products`);
 
-        // --- Migration: Chỉ cần cập nhật logic này nếu bạn muốn xóa tiền tố './assets/' --
-        // Tuy nhiên, vì initialProducts đã được sửa, ta có thể bỏ qua bước migration phức tạp này
-        
-        // 3. Users
+
         await database.execAsync(
             `CREATE TABLE IF NOT EXISTS users (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,7 +156,6 @@ export const initDatabase = async (onSuccess?: () => void): Promise<void> => {
     }
 };
 
-// ------------------- Fetch (API hiện đại: getAllAsync) -------------------
 export const fetchCategories = async (): Promise<Category[]> => {
     try {
         const database = await getDb();
@@ -204,9 +200,7 @@ export const fetchUsers = async (): Promise<User[]> => {
         return [];
     }
 };
-// Thêm đoạn code này vào file database services hiện tại của bạn
 
-// ------------------- Fetch Products by Category ID -------------------
 export const fetchProductsByCategoryId = async (categoryId: number): Promise<Product[]> => {
     try {
         const database = await getDb();
@@ -214,8 +208,6 @@ export const fetchProductsByCategoryId = async (categoryId: number): Promise<Pro
             console.error('❌ Database is null when fetching products by categoryId');
             return [];
         }
-        
-        // SỬ DỤNG CÂU LỆNH SQL CÓ ĐIỀU KIỆN WHERE
         const items = await database.getAllAsync<Product>(
             'SELECT * FROM products WHERE categoryId = ?', 
             [categoryId]
@@ -226,11 +218,6 @@ export const fetchProductsByCategoryId = async (categoryId: number): Promise<Pro
         return [];
     }
 };
-
-// 🔴 KHUYẾN NGHỊ: ĐÃ BỎ HÀM getImageSource LỖI Ở ĐÂY 
-// VÀ CHỈ SỬ DỤNG LOGIC ÁNH XẠ ĐÃ SỬA CỦA HomeScreen.tsx
-// (Vì logic đó linh hoạt hơn và xử lý tên file trực tiếp)
-
 
 // ------------------- CRUD Products -------------------
 export const addProduct = async (product: Omit<Product, 'id'>) => {
@@ -288,14 +275,10 @@ export const addUser = async (username: string, password: string, role: string):
 export const getUserByCredentials = async (username: string, password: string): Promise<User | null> => {
     try {
         const db = await getDb();
-        
-        // SỬA LỖI: Truy vấn trực tiếp bằng cả username và password
         const user = await db.getFirstAsync<User>(
             'SELECT * FROM users WHERE username = ? AND password = ?',
             [username, password]
         );
-        
-        // user sẽ là một đối tượng User nếu tìm thấy, hoặc undefined nếu không tìm thấy
         return user || null; 
 
     } catch (error: any) {
@@ -449,41 +432,137 @@ const imageAssets: { [key: string]: any } = {
     'Hình-siêu-xe-cực-nét.jpg': require('./assets/Hình-siêu-xe-cực-nét.jpg'),
     'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
     '1.jpg': require('./assets/1.jpg'),
-    '26900.jpg': require('./assets/26900.jpg'), // Ảnh mặc định cho các trường hợp không tìm thấy
-    // Đảm bảo TẤT CẢ TÊN FILE ảnh bạn sử dụng đều có trong map này
+    '26900.jpg': require('./assets/26900.jpg'), 
 };
-
-// --- HÀM ÁNH XẠ ẢNH (BẮT BUỘC PHẢI CÓ EXPORT) ---
+const isUri = (str: string) => {
+    return str.startsWith('http') || str.startsWith('file://') || str.startsWith('content://') || str.startsWith('asset://');
+};
 export const getImageSource = (img: string) => {
-    // 1. Chuẩn hóa & trích xuất filename (để xử lý các đường dẫn cũ nếu còn sót hoặc gõ sai)
+    if (!img) {
+        return require('./assets/26900.jpg'); 
+    }
+    if (isUri(img)) {
+        return { uri: img }; 
+    }
     const normalizedPath = img.replace(/\\/g, '/');
     const filename = normalizedPath.split('/').pop() || '';
     
-    // 2. Tra cứu trong map
+ 
     if (imageAssets[filename]) {
-        return imageAssets[filename];
+        return imageAssets[filename]; 
     }
-
-    // Fallback mặc định
     console.warn(`⚠️ Image not found in map for filename: ${filename}. Using fallback.`);
     return require('./assets/26900.jpg'); 
 };
-// ------------------- Reset then Re-initialize -------------------
-// Utility to drop existing tables and immediately re-run initDatabase
+
 export const resetAndInitDatabase = async (onSuccess?: () => void): Promise<void> => {
     try {
         await resetDatabase();
-
-        // set cached db to null so getDb() can re-open if needed
         db = null as unknown as SQLiteDatabase | null;
-
-        // Wait a bit for file system to settle
         await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Re-initialize (will recreate tables and seed initial data)
         await initDatabase(onSuccess);
         console.log('✅ Database reset and re-initialized');
     } catch (error) {
         console.error('❌ Error during resetAndInitDatabase:', error);
+    }
+};
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export type StoredOrder = {
+    id: string;
+    orderId: string;
+    totalAmount: number;
+    deliveryAddress: string;
+    phone: string;
+    deliveryMethod: string;
+    paymentMethod: string;
+    orderDate: string;
+    status: string;
+    items?: any[];
+};
+
+/**
+ * Lưu một đơn hàng mới vào AsyncStorage dưới khóa của người dùng.
+ */
+export const saveOrder = async (orderId: string, orderData: any, username: string, items?: any[]) => {
+    try {
+        const storageKey = `orders_${username}`;
+        const existingOrdersStr = await AsyncStorage.getItem(storageKey);
+        
+        let orders: StoredOrder[] = [];
+        if (existingOrdersStr) {
+            orders = JSON.parse(existingOrdersStr);
+        }
+
+        const newOrder: StoredOrder = {
+            id: orderId,
+            orderId: orderId,
+            totalAmount: orderData.totalAmount,
+            deliveryAddress: orderData.deliveryAddress,
+            phone: orderData.phone,
+            deliveryMethod: orderData.deliveryMethod,
+            paymentMethod: orderData.paymentMethod,
+            // Gợi ý: Lưu dưới dạng ISO String nếu orderData.orderDate chưa phải là string
+            orderDate: orderData.orderDate, 
+            status: orderData.status,
+            items: items || [],
+        };
+
+        orders.unshift(newOrder); // Thêm vào đầu danh sách
+        await AsyncStorage.setItem(storageKey, JSON.stringify(orders));
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving order:', error);
+        return false;
+    }
+};
+
+/**
+ * Lấy tất cả đơn hàng đã lưu của một người dùng.
+ */
+export const getOrders = async (username: string): Promise<StoredOrder[]> => {
+    try {
+        const storageKey = `orders_${username}`;
+        const ordersStr = await AsyncStorage.getItem(storageKey);
+        
+        if (ordersStr) {
+            return JSON.parse(ordersStr);
+        }
+        return [];
+    } catch (error) {
+        console.error('Error getting orders:', error);
+        return [];
+    }
+};
+
+/**
+ * Cập nhật trạng thái của một đơn hàng cụ thể.
+ */
+export const updateOrderStatus = async (username: string, orderId: string, newStatus: string): Promise<boolean> => {
+    try {
+        const storageKey = `orders_${username}`;
+        const ordersStr = await AsyncStorage.getItem(storageKey);
+        
+        if (!ordersStr) {
+            return false;
+        }
+
+        let orders: StoredOrder[] = JSON.parse(ordersStr);
+        const orderIndex = orders.findIndex(o => o.orderId === orderId);
+
+        if (orderIndex === -1) {
+            console.warn(`Order ID ${orderId} not found for user ${username}.`);
+            return false;
+        }
+
+        // Cập nhật trạng thái
+        orders[orderIndex].status = newStatus;
+
+        await AsyncStorage.setItem(storageKey, JSON.stringify(orders));
+        return true;
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        return false;
     }
 };

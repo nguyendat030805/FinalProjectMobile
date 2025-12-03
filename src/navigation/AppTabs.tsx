@@ -6,8 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 // Screens
-import HomeStackScreen from '../HomeStackScreen';
-import AdminStackScreen from '../AdminStackScreen';
+import HomeStackScreen from '../screens/HomeStackScreen';
+import AdminStackScreen from '../screens/AdminStackScreen';
 import LoginSqlite from '../sqlite/LoginSqLite';
 import SignupSqlite from '../sqlite/RegissterSqLite';
 import LogoutScreen from '../sqlite/LogoutScreen';

@@ -22,7 +22,7 @@ import {
     resetAndInitDatabase,
     User 
 } from '../../database'; // Thay đổi đường dẫn theo cấu trúc project của bạn
-import { getOrders, updateOrderStatus } from '../../utils/orderStorage'; // Thay đổi đường dẫn theo cấu trúc project của bạn
+import { getOrders, updateOrderStatus } from '../../database'; // Thay đổi đường dẫn theo cấu trúc project của bạn
 
 const USER_ROLES = ['admin', 'user', 'guest'] as const;
 type UserRole = (typeof USER_ROLES)[number]; 

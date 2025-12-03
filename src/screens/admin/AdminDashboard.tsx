@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import UserManagementScreen from './UserManagement';
 import CategoriesManagement from './CategoriesManagement';
-import Header from '../../Header';
+import Header from '../../components/Header';
 import ProductsManagement from './ProductsManagement';
 
 type TabType = 'users' | 'categories' | 'products';

@@ -3,14 +3,13 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BottomTabParamList } from './navigation/AppTabs';
+import { BottomTabParamList } from '../navigation/AppTabs';
 
 const Header = () => {
     const [user, setUser] = useState<{ username: string; role: string } | null>(null);
     const navigation =
         useNavigation<NativeStackNavigationProp<BottomTabParamList>>();
-
-    // Load user khi focus vào màn hình
+        
     useFocusEffect(
         useCallback(() => {
             const loadUser = async () => {
@@ -28,11 +27,7 @@ const Header = () => {
 
     const handleLogout = async () => {
         await AsyncStorage.removeItem('loggedInUser');
-        setUser(null); // Xóa thông tin người dùng trong state
-
-        // Điều hướng về trang LoginSqlite
-        // Dùng 'as never' nếu LoginSqlite không phải là màn hình thuộc Tab chính 
-        // hoặc không phải là màn hình đầu tiên của Stack trong Tab
+        setUser(null); 
         navigation.navigate('LoginSqlite' as never); 
     };
 
@@ -40,14 +35,12 @@ const Header = () => {
         <View style={styles.header}>
             {user ? (
                 <>
-                    {/* KHẮC PHỤC LỖI: Chỉ dùng 1 thẻ Text duy nhất để hiển thị thông tin */}
                     <Text style={styles.userInfo}>
                         Xin chào, <Text style={styles.usernameText}>{String(user.username)}</Text> <Text style={styles.roleText}></Text>
                     </Text>
                 
                 </>
             ) : (
-                 // Hiển thị tên ứng dụng hoặc thông báo nếu chưa đăng nhập
                 <Text style={styles.appTitle}>Siêu Xe App</Text>
             )}
         </View>
@@ -59,8 +52,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 15, // Dùng padding ngang rõ ràng
-        paddingVertical: 10,   // Dùng padding dọc rõ ràng
+        paddingHorizontal: 15, 
+        paddingVertical: 10,  
         backgroundColor: '#F0BA5C',
     },
     appTitle: {
@@ -74,11 +67,11 @@ const styles = StyleSheet.create({
     },
     usernameText: {
         fontWeight: 'bold',
-        color: '#4e3e07ff', // Màu nhấn
+        color: '#4e3e07ff', 
     },
     roleText: {
         fontWeight: 'bold',
-        color: '#b3e5fc', // Màu nhấn
+        color: '#b3e5fc', 
         textTransform: 'capitalize',
     },
     logoutButton: {

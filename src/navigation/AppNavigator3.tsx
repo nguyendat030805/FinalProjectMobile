@@ -2,9 +2,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
-import AppTabs from './navigation/AppTabs';
-import { CartProvider } from './context/CartContext';
-import { HomeStackParamList } from './Types';
+import AppTabs from './AppTabs';
+import { CartProvider } from '../context/CartContext';
+import { HomeStackParamList } from '../types/Types';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 

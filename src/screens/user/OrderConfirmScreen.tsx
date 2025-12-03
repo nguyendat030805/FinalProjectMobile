@@ -9,7 +9,7 @@ import {
     Dimensions,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '../../HomeScreen';
+import { HomeStackParamList } from '../HomeScreen';
 import { getImageSource } from '../../database';
 type OrderConfirmScreenProps = NativeStackScreenProps<HomeStackParamList, 'OrderConfirm'>;
 

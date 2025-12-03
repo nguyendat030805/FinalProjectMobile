@@ -14,9 +14,9 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Product, fetchProducts, initDatabase } from './database';
-import { useCart } from './context/CartContext';
-import Header from './Header'; 
+import { Product, fetchProducts, initDatabase } from '../database'; 
+import { useCart } from '../context/CartContext';
+import Header from '../components/Header'; 
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 3;
@@ -38,43 +38,47 @@ export type HomeStackParamList = {
 
 type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
-// --- Hàm tiện ích (Không thay đổi) ---
 const formatCurrency = (amount: number) =>
     amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 });
 
-// --- Ánh xạ ảnh tĩnh (Không thay đổi) ---
 const imageAssets: { [key: string]: any } = {
-    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
-    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
-    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
-    'Hình-siêu-xe-cực-nét.jpg': require('./assets/Hình-siêu-xe-cực-nét.jpg'),
-    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
-    '1.jpg': require('./assets/1.jpg'),
-    'Hình-siêu-xe-Lamborghini-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-scaled.jpg'),
-    'Hình-ảnh-Siêu-xe-4k-scaled.jpg': require('./assets/Hình-ảnh-Siêu-xe-4k-scaled.jpg'),
-    'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('./assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
-    'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
-    'Ảnh-siêu-xe-Lamborghini.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini.jpg'),
-    // Thêm các ảnh khác nếu có
+    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('../assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
+    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('../assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
+    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('../assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
+    'Hình-siêu-xe-cực-nét.jpg': require('../assets/Hình-siêu-xe-cực-nét.jpg'),
+    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('../assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
+    '1.jpg': require('../assets/1.jpg'),
+    'Hình-siêu-xe-Lamborghini-scaled.jpg': require('../assets/Hình-siêu-xe-Lamborghini-scaled.jpg'),
+    'Hình-ảnh-Siêu-xe-4k-scaled.jpg': require('../assets/Hình-ảnh-Siêu-xe-4k-scaled.jpg'),
+    'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('../assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
+    'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('../assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
+    'Ảnh-siêu-xe-Lamborghini.jpg': require('../assets/Ảnh-siêu-xe-Lamborghini.jpg'),
 };
 
-// --- HÀM LẤY ẢNH ĐÃ ĐƯỢC CHỈNH SỬA (FIX LỖI HIỂN THỊ ẢNH FALLBACK) ---
-const getImageSource = (img: string) => {
-    // 1. Chuẩn hóa: Thay thế tất cả '\' thành '/' để xử lý đường dẫn Windows
-    const normalizedPath = img.replace(/\\/g, '/');
+const isUri = (str: string) => {
+    return str.startsWith('http') || str.startsWith('file://') || str.startsWith('content://') || str.startsWith('asset://');
+};
 
-    // 2. Trích xuất filename: Lấy phần tử cuối cùng sau dấu '/'
+const getImageSource = (img: string) => {
+    if (!img) {
+        return require('../assets/26900.jpg');
+    }
+    
+
+    if (isUri(img)) {
+        return { uri: img };
+    }
+    
+
+    const normalizedPath = img.replace(/\\/g, '/');
     const filename = normalizedPath.split('/').pop() || '';
     
-    // 3. Tra cứu trong map
     if (imageAssets[filename]) {
         return imageAssets[filename];
     }
 
     console.warn(`⚠️ Image not found in map: ${filename}. Original path: ${img}. Using fallback.`);
-    
-    // Fallback mặc định
-    return require('./assets/26900.jpg');
+    return require('../assets/26900.jpg');
 };
 // ----------------------------------------------------------------------
 
@@ -96,7 +100,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
             const prods = await fetchProducts();
             console.log('📦 Products loaded:', prods.length, 'products');
             // Log chi tiết để debug đường dẫn ảnh
-            prods.forEach((p, i) => console.log(`  [${i}] ${p.name} - img: ${p.img}`));
+            prods.forEach((p, i) => console.log(`  [${i}] ${p.name} - img: ${p.img}`));
             setProducts(prods.reverse());
         } catch (error) {
             console.error("Lỗi khi tải sản phẩm từ DB:", error);
@@ -111,7 +115,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
             const user = await AsyncStorage.getItem('loggedInUser');
             if (!user) {
                 Alert.alert('Thông báo', 'Vui lòng đăng nhập để mua hàng', [
-                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Home') }, // Chú ý: Cần điều hướng đến màn hình Đăng nhập/Login, không phải Home
+                    { text: 'Đăng nhập', onPress: () => navigation.navigate('Home') },
                     { text: 'Hủy', style: 'cancel' },
                 ]);
                 return;
@@ -147,7 +151,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
 
     const renderItem = ({ item }: { item: Product }) => (
         <TouchableOpacity
-           
+            
             onPress={() => navigation.navigate('ProductDetail', { product: item })}
              style={styles.maincontainer}
         >
@@ -174,7 +178,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
     const HeaderComponent = () => (
         <>
             <Image
-                source={require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg')}
+                source={require('../assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg')}
                 style={styles.banner}
             />
             
@@ -256,10 +260,10 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
                                                             color === 'Đỏ'
                                                                 ? '#E91E63'
                                                                 : color === 'Đen'
-                                                                  ? '#1a1a1a'
-                                                                  : color === 'Bạc'
-                                                                    ? '#C0C0C0'
-                                                                    : '#1E88E5',
+                                                                    ? '#1a1a1a'
+                                                                    : color === 'Bạc'
+                                                                        ? '#C0C0C0'
+                                                                        : '#1E88E5',
                                                     },
                                                 ]}
                                             />
@@ -325,15 +329,13 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
     );
 };
 
-// --- Stylesheet (Không thay đổi) ---
+
 const styles = StyleSheet.create({
-    // --- Container & Layout ---
     fullScreenContainer: { 
         flex: 1, 
-        backgroundColor: '#6d6a6aff', // Nền tối hiện đại
+        backgroundColor: '#6d6a6aff', 
     },
     flatListContent: { 
-        // Giữ nguyên: Đây là padding giữa màn hình và các cột
         paddingHorizontal: ITEM_MARGIN / 2, 
         paddingBottom: 20,
     },
@@ -343,7 +345,7 @@ const styles = StyleSheet.create({
         margin: ITEM_MARGIN / 2,
     },
 
-    // --- Header & Menu ---
+
     banner: { 
         width: '100%', 
         height: 180, 
@@ -408,7 +410,6 @@ const styles = StyleSheet.create({
         fontWeight: '400', 
         color: '#000000ff', 
         textAlign: 'center', 
-        // Loại bỏ marginHorizontal, thay bằng paddingHorizontal trên productCard
         marginBottom: 5,
     },
     productPrice: { 
@@ -417,7 +418,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     
-    // --- Button ---
     buyButton: { 
         backgroundColor: '#e9981fff', 
         width: '70%', 

@@ -8,4 +8,8 @@ export type HomeStackParamList = {
     Checkout: { cartItems: any };
     OrderConfirm: any;
     OrderHistory: undefined;
+    orderId:undefined;
+    orderData: undefined; 
+    cartItems: undefined; 
+    totalPrice: undefined;
 };

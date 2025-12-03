@@ -13,6 +13,7 @@ import {
     SafeAreaView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker'; // 👈 Bổ sung thư viện chọn ảnh
 
 // CHÚ Ý ĐƯỜNG DẪN IMPORT TỚI database.ts
 import {
@@ -24,25 +25,35 @@ import {
     Product,
     Category,
     resetAndInitDatabase,
-    getImageSource, // <--- ĐÃ THÊM HÀM ÁNH XẠ ẢNH
+    getImageSource, // <--- Đã được cập nhật để xử lý URI/URL/Tên file
 } from '../../database'; 
+
+// --- TYPE MỚI CHO LỰA CHỌN NGUỒN ẢNH ---
+type ImageSourceOption = 'filename' | 'url' | 'library';
 
 const ProductsManagement = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    
+    // --- STATE ĐỂ LƯU THÔNG TIN INPUT ---
     const [productName, setProductName] = useState<string>('');
     const [productPrice, setProductPrice] = useState<string>('');
-    const [productImg, setProductImg] = useState<string>('');
+    const [productImg, setProductImg] = useState<string>(''); // Lưu Tên file / URL / URI
     const [productCategoryId, setProductCategoryId] = useState<string>('1');
+    
+    // --- STATE MỚI CHO CHỌN ẢNH ---
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [imageSourceOption, setImageSourceOption] = useState<ImageSourceOption>('filename');
+    const [selectedImageUri, setSelectedImageUri] = useState<string>(''); // Lưu URI tạm thời từ thư viện
 
     useEffect(() => {
         const initializeData = async () => {
-            // Đợi 500ms để đảm bảo DB kịp mở/load
             await new Promise(resolve => setTimeout(resolve, 500)); 
             await loadData();
+            // Yêu cầu quyền truy cập thư viện ảnh ngay khi khởi động
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
         };
         initializeData();
     }, []);
@@ -54,7 +65,6 @@ const ProductsManagement = () => {
             setProducts(productsData);
             setCategories(categoriesData);
             if (categoriesData.length > 0) {
-                // Đảm bảo rằng Category ID được set là String
                 setProductCategoryId(categoriesData[0].id.toString()); 
             }
         } catch (error) {
@@ -69,16 +79,67 @@ const ProductsManagement = () => {
         setProductName('');
         setProductPrice('');
         setProductImg('');
-        // Đặt lại category ID đầu tiên nếu tồn tại
         setProductCategoryId(categories[0]?.id.toString() || '1'); 
         setEditingProduct(null);
+        // Reset trạng thái chọn ảnh
+        setImageSourceOption('filename'); 
+        setSelectedImageUri('');
     };
-
-    const handleSaveProduct = async () => {
-        if (!productName.trim() || !productPrice.trim() || !productImg.trim()) {
-            Alert.alert('Lỗi', 'Vui lòng điền tất cả các trường');
+    
+    // --- HÀM XỬ LÝ CHỌN ẢNH TỪ THƯ VIỆN ---
+    const pickImage = async () => {
+        // Kiểm tra quyền
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Lỗi quyền', 'Cần quyền truy cập thư viện ảnh để chọn ảnh.');
             return;
         }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+            // Không cần Base64, chỉ cần URI là đủ để hiển thị và lưu tạm
+        });
+
+        if (!result.canceled) {
+            const uri = result.assets[0].uri;
+            // Lưu URI vào state tạm thời. Nó sẽ được gán vào productImg khi lưu.
+            setSelectedImageUri(uri); 
+            setProductImg(uri); // Cập nhật productImg ngay lập tức (dùng cho hiển thị preview)
+            Alert.alert('Thành công', 'Đã chọn ảnh từ thư viện.');
+        } else {
+             // Nếu người dùng hủy chọn ảnh, chuyển lại về lựa chọn "Tên file"
+             if (!productImg && !editingProduct) {
+                setImageSourceOption('filename');
+             }
+        }
+    };
+
+    // --- HÀM LƯU SẢN PHẨM (ĐÃ ĐƯỢC CẬP NHẬT LOGIC NGUỒN ẢNH) ---
+    const handleSaveProduct = async () => {
+        let finalImgSource = productImg.trim();
+
+        // 1. Kiểm tra đầu vào cơ bản
+        if (!productName.trim() || !productPrice.trim()) {
+            Alert.alert('Lỗi', 'Vui lòng điền tên và giá');
+            return;
+        }
+        
+        // 2. Xử lý nguồn ảnh tùy theo lựa chọn
+        if (imageSourceOption === 'library') {
+            if (!selectedImageUri) {
+                 Alert.alert('Lỗi', 'Vui lòng chọn ảnh từ thư viện.');
+                 return;
+            }
+            finalImgSource = selectedImageUri; // Gán URI cục bộ
+        } else if (!finalImgSource) {
+            // Kiểm tra trường hợp Filename hoặc URL rỗng
+            Alert.alert('Lỗi', 'Vui lòng nhập Tên file hoặc Link ảnh.');
+            return;
+        }
+
 
         const price = parseFloat(productPrice);
         if (isNaN(price) || price < 0) {
@@ -89,22 +150,21 @@ const ProductsManagement = () => {
         try {
             const categoryId = parseInt(productCategoryId);
 
+            const productDataToSave: Omit<Product, 'id'> = {
+                name: productName,
+                price,
+                img: finalImgSource, // Chuỗi có thể là Tên file, URL, hoặc URI
+                categoryId
+            };
+
             if (editingProduct) {
                 await updateDbProduct({
+                    ...productDataToSave,
                     id: editingProduct.id,
-                    name: productName,
-                    price,
-                    img: productImg,
-                    categoryId
-                });
+                } as Product);
                 Alert.alert('Thành công', 'Cập nhật sản phẩm thành công');
             } else {
-                await addProduct({
-                    name: productName,
-                    price,
-                    img: productImg,
-                    categoryId
-                });
+                await addProduct(productDataToSave);
                 Alert.alert('Thành công', 'Thêm sản phẩm thành công');
             }
             await loadData();
@@ -116,6 +176,7 @@ const ProductsManagement = () => {
         }
     };
 
+    // ... (Các hàm khác: handleDeleteProduct, handleEditProduct, getCategoryName, loading check)
     const handleDeleteProduct = (id: number, name: string) => {
         Alert.alert('Xác nhận Xóa', `Bạn có chắc chắn muốn xóa sản phẩm "${name}"?`, [
             { text: 'Hủy', style: 'cancel' },
@@ -142,6 +203,18 @@ const ProductsManagement = () => {
         setProductImg(product.img);
         setProductCategoryId(product.categoryId.toString());
         setShowModal(true);
+
+        // Xác định nguồn ảnh hiện tại khi vào chế độ sửa
+        if (product.img.startsWith('http')) {
+            setImageSourceOption('url');
+            setSelectedImageUri('');
+        } else if (product.img.startsWith('file://') || product.img.startsWith('content://')) {
+            setImageSourceOption('library');
+            setSelectedImageUri(product.img);
+        } else {
+            setImageSourceOption('filename');
+            setSelectedImageUri('');
+        }
     };
 
     const getCategoryName = (categoryId: number) =>
@@ -161,7 +234,7 @@ const ProductsManagement = () => {
     return (
         <SafeAreaView style={styles.safe}>
             <View style={styles.container}>
-                {/* Header */}
+                {/* Header và List */}
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.appTitle}>Quản lý Sản phẩm</Text>
@@ -204,7 +277,6 @@ const ProductsManagement = () => {
 
                 <View style={styles.separator} />
 
-                {/* List header */}
                 <View style={styles.listHeader}>
                     <Text style={styles.sectionTitle}>Danh sách Sản phẩm ({products.length})</Text>
                 </View>
@@ -221,7 +293,7 @@ const ProductsManagement = () => {
 
                     {products.map(product => (
                         <View key={product.id} style={styles.card}>
-                            {/* SỬ DỤNG getImageSource() - Đã đúng */}
+                            {/* SỬ DỤNG getImageSource() - Xử lý 3 loại nguồn ảnh */}
                             <Image 
                                 source={getImageSource(product.img)} 
                                 style={styles.cardImage} 
@@ -253,7 +325,7 @@ const ProductsManagement = () => {
                     ))}
                 </ScrollView>
 
-                {/* Modal bottom sheet */}
+                {/* Modal bottom sheet (Phần đã được cập nhật) */}
                 <Modal
                     visible={showModal}
                     transparent
@@ -298,15 +370,88 @@ const ProductsManagement = () => {
                                 keyboardType="decimal-pad"
                             />
 
-                            {/* Hướng dẫn chỉ nhập TÊN FILE - Đã đúng */}
-                            <Text style={styles.label}>Tên file ảnh (Ví dụ: 1.jpg)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Ví dụ: 1.jpg"
-                                value={productImg}
-                                onChangeText={setProductImg}
-                            />
+                            {/* --- NGUỒN ẢNH SEGMENTED CONTROL --- */}
+                            <Text style={styles.label}>Nguồn ảnh</Text>
+                            <View style={styles.segmentedControl}>
+                                <TouchableOpacity
+                                    style={[styles.segment, imageSourceOption === 'filename' && styles.segmentSelected]}
+                                    onPress={() => {
+                                        setImageSourceOption('filename');
+                                        setProductImg(''); 
+                                        setSelectedImageUri('');
+                                    }}
+                                >
+                                    <Text style={[styles.segmentText, imageSourceOption === 'filename' && styles.segmentTextSelected]}>Tên file (Assets)</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.segment, imageSourceOption === 'url' && styles.segmentSelected]}
+                                    onPress={() => {
+                                        setImageSourceOption('url');
+                                        setProductImg(''); 
+                                        setSelectedImageUri('');
+                                    }}
+                                >
+                                    <Text style={[styles.segmentText, imageSourceOption === 'url' && styles.segmentTextSelected]}>Link (URL)</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.segment, imageSourceOption === 'library' && styles.segmentSelected]}
+                                    onPress={() => {
+                                        setImageSourceOption('library');
+                                        setProductImg(''); 
+                                        // Tự động mở thư viện, hàm pickImage sẽ cập nhật selectedImageUri
+                                        pickImage(); 
+                                    }}
+                                >
+                                    <Text style={[styles.segmentText, imageSourceOption === 'library' && styles.segmentTextSelected]}>Thư viện</Text>
+                                </TouchableOpacity>
+                            </View>
 
+                            {/* --- VÙNG NHẬP LIỆU TÙY CHỌN --- */}
+                            {imageSourceOption === 'filename' && (
+                                <>
+                                    <Text style={styles.label}>Tên file ảnh (Ví dụ: 1.jpg)</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Ví dụ: 1.jpg"
+                                        value={productImg}
+                                        onChangeText={setProductImg}
+                                    />
+                                </>
+                            )}
+
+                            {imageSourceOption === 'url' && (
+                                <>
+                                    <Text style={styles.label}>Link ảnh (URL)</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Ví dụ: https://linkanh.com/sp1.png"
+                                        value={productImg}
+                                        onChangeText={setProductImg}
+                                        keyboardType="url"
+                                    />
+                                </>
+                            )}
+
+                            {imageSourceOption === 'library' && (
+                                <>
+                                    <Text style={styles.label}>Ảnh đã chọn</Text>
+                                    {(selectedImageUri || (editingProduct && editingProduct.img.startsWith('file'))) ? (
+                                        <Image 
+                                            source={{ uri: selectedImageUri || editingProduct?.img }} 
+                                            style={styles.previewImage} 
+                                        />
+                                    ) : (
+                                        <TouchableOpacity 
+                                            style={styles.libraryButton} 
+                                            onPress={pickImage}
+                                        >
+                                            <Text style={styles.libraryButtonText}>Chọn ảnh từ thư viện</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </>
+                            )}
+                            
+                            {/* --- SELECT CATEGORY --- */}
                             <Text style={styles.label}>Danh mục</Text>
                             <View style={styles.pickerWrap}>
                                 <Picker 
@@ -320,6 +465,7 @@ const ProductsManagement = () => {
                                 </Picker>
                             </View>
 
+                            {/* --- NÚT LƯU --- */}
                             <TouchableOpacity style={styles.primaryButton} onPress={handleSaveProduct}>
                                 <Text style={styles.primaryButtonText}>
                                     {editingProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}
@@ -345,6 +491,7 @@ const ProductsManagement = () => {
     );
 };
 
+// --- STYLES (ĐÃ BỔ SUNG CHO NGUỒN ẢNH) ---
 const styles = StyleSheet.create({
     safe: {
         flex: 1,
@@ -367,11 +514,6 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#1F2430',
         letterSpacing: 0.3
-    },
-    appSubtitle: {
-        fontSize: 12,
-        color: '#7D8597',
-        marginTop: 4
     },
     headerActions: {
         flexDirection: 'row',
@@ -621,6 +763,60 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 14,
         color: '#505A6C'
+    },
+    // --- STYLES MỚI CHO SEGMENTED CONTROL ---
+    segmentedControl: {
+        flexDirection: 'row',
+        marginBottom: 16,
+        backgroundColor: '#E4E7EB',
+        borderRadius: 12,
+        padding: 4
+    },
+    segment: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    segmentSelected: {
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2
+    },
+    segmentText: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#505A6C'
+    },
+    segmentTextSelected: {
+        color: '#1F2430',
+        fontWeight: '700'
+    },
+    previewImage: {
+        width: '100%',
+        height: 150,
+        borderRadius: 12,
+        resizeMode: 'cover',
+        marginBottom: 16,
+        backgroundColor: '#F0F2F7'
+    },
+    libraryButton: {
+        backgroundColor: '#D1772E10',
+        borderColor: '#D1772E',
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginBottom: 16
+    },
+    libraryButtonText: {
+        color: '#D1772E',
+        fontWeight: '600'
     }
 });
 

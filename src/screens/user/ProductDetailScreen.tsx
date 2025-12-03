@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HomeStackParamList } from '../../HomeScreen';
+import { HomeStackParamList } from '../HomeScreen';
 import { useCart } from '../../context/CartContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchProducts, Product } from '../../database';

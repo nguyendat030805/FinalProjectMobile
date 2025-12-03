@@ -13,9 +13,9 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HomeStackParamList } from '../../HomeScreen';
+import { HomeStackParamList } from '../HomeScreen';
 import { useCart } from '../../context/CartContext';
-import { saveOrder } from '../../utils/orderStorage';
+import { saveOrder } from '../../database';
 import { getImageSource } from '../../database';
 
 type CheckoutScreenProps = NativeStackScreenProps<HomeStackParamList, 'Checkout'>;

@@ -20,25 +20,25 @@ import {
     fetchCategories, 
     fetchProductsByCategoryId,
     searchProductsAdvanced, // <<-- Hàm tìm kiếm nâng cao
-} from './database'; // Đảm bảo đường dẫn này chính xác
+} from '../database'; // Đảm bảo đường dẫn này chính xác
 
 // --- 1. Ánh xạ ảnh tĩnh (Cần phải sao chép từ HomeScreen.tsx để tránh lỗi Reference) ---
 // Giả định rằng bạn có các ảnh này trong thư mục ./assets/
 const imageAssets: { [key: string]: any } = {
-    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('./assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
-    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('./assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
-    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('./assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
-    'Hình-siêu-xe-cực-nét.jpg': require('./assets/Hình-siêu-xe-cực-nét.jpg'),
-    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
-    '1.jpg': require('./assets/1.jpg'),
-    'Hình-siêu-xe-Lamborghini-scaled.jpg': require('./assets/Hình-siêu-xe-Lamborghini-scaled.jpg'),
-    'Hình-ảnh-Siêu-xe-4k-scaled.jpg': require('./assets/Hình-ảnh-Siêu-xe-4k-scaled.jpg'),
-    'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('./assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
-    'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
-    'Ảnh-siêu-xe-Lamborghini.jpg': require('./assets/Ảnh-siêu-xe-Lamborghini.jpg'),
+    'hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg': require('../assets/hinh-anh-sieu-xe-lamborghini-doc-dao_062150116.jpg'),
+    'Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg': require('../assets/Hình-siêu-xe-4k-cực-nét-cho-laptop-máy-tính-scaled.jpg'),
+    'Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg': require('../assets/Hình-Siêu-xe-4k-cực-đẹp-scaled.jpg'),
+    'Hình-siêu-xe-cực-nét.jpg': require('../assets/Hình-siêu-xe-cực-nét.jpg'),
+    'Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg': require('../assets/Hình-siêu-xe-Lamborghini-cực-đẹp-scaled.jpg'),
+    '1.jpg': require('../assets/1.jpg'),
+    'Hình-siêu-xe-Lamborghini-scaled.jpg': require('../assets/Hình-siêu-xe-Lamborghini-scaled.jpg'),
+    'Hình-ảnh-Siêu-xe-4k-scaled.jpg': require('../assets/Hình-ảnh-Siêu-xe-4k-scaled.jpg'),
+    'Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg': require('../assets/Tải-hình-ảnh-siêu-xe-HD-cực-đẹp-về-máy.jpg'),
+    'Ảnh-siêu-xe-Lamborghini-Full-HD.jpg': require('../assets/Ảnh-siêu-xe-Lamborghini-Full-HD.jpg'),
+    'Ảnh-siêu-xe-Lamborghini.jpg': require('../assets/Ảnh-siêu-xe-Lamborghini.jpg'),
     // Thêm các ảnh mặc định/fallback nếu cần
-    '26900.jpg': require('./assets/26900.jpg'), 
-    '2161748.jpg': require('./assets/2161748.jpg'), 
+    '26900.jpg': require('../assets/26900.jpg'), 
+    '2161748.jpg': require('../assets/2161748.jpg'), 
     // Nếu bạn đang dùng logic tên file từ database.tsx đã sửa, thì không cần tiền tố ./assets/
 };
 
@@ -56,7 +56,7 @@ const getImageSource = (img: string) => {
     console.warn(`⚠️ Image not found in map for CategorySelector: ${filename}`);
     
     // Fallback mặc định
-    return require('./assets/Hình-siêu-xe-cực-nét.jpg');
+    return require('../assets/Hình-siêu-xe-cực-nét.jpg');
 };
 
 
@@ -202,7 +202,7 @@ const CategorySelector = () => {
     const renderProductItem: ListRenderItem<Product> = ({ item }) => (
         <View style={styles.productItem}>
             <Image 
-                source={item.img ? getImageSource(item.img) : require('./assets/Hình-siêu-xe-cực-nét.jpg')} 
+                source={item.img ? getImageSource(item.img) : require('../assets/Hình-siêu-xe-cực-nét.jpg')} 
                 style={styles.productImage} 
                 resizeMode="cover"
             />
